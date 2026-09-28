@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "vtt-pendragon6e",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8750"],
+      "port": 8750
+    },
+    {
+      "name": "vtt-pendragon6e-worker",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["wrangler", "dev", "--port", "8805"],
+      "port": 8805,
+      "cwd": "worker"
+    }
+  ]
+}

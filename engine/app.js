@@ -1,0 +1,285 @@
+// engine/app.js — the GM page's shell: a sidebar of panels in sections, and regions laid out by a preset.
+// Ported from sortilege-vtt-daggerheart (its GM workbench, 0002b45: sectioned nav, layout presets,
+// click-to-select regions).
+//
+// Wide (≥ 1100px): the regions of the layout the GM picks (Settings ▸ Layout), each showing one
+// panel from the registry (the choices are per-browser preferences); a click selects a region, and
+// a nav choice then opens there. Narrow: one panel at a time. Panels never know which.
+(function () {
+  const { el } = window.VttRender;
+  const State = window.VttState;
+  const Panels = window.VttPanels;
+  const CFG = window.VttConfig;
+
+  const WIDE = 1100;
+  // the panels a fresh browser opens each region on: the system names the first three in
+  // engine/config.js; the split layouts fall back to these (then more) for their extra regions.
+  const DEFAULT_SLOTS = (CFG.defaultSlots && CFG.defaultSlots.length >= 3) ? CFG.defaultSlots.slice() : ['frame', 'party', 'inspector'];
+  const REGION_FALLBACK = DEFAULT_SLOTS.concat(['overview', 'scenes', 'threads', 'log']);
+
+  // The wide-mode layouts the GM picks from (Settings ▸ Layout — a per-browser preference). A layout
+  // is a set of columns; a column holds one region or two stacked (top over bottom). `regions` is how
+  // many independent panel regions it has, filled in reading order (each column top-to-bottom). The
+  // numbers in `cols` are region indices, so the CSS (.ly-* ▸ [data-region]) can place each one.
+  const LAYOUTS = [
+    { id: '3row',           label: 'Three rows',                 regions: 3, cls: 'ly-3row',    cols: [[0, 1, 2]] },
+    { id: '3col',           label: 'Three columns',              regions: 3, cls: 'ly-3col',    cols: [[0], [1], [2]] },
+    { id: '4col',           label: 'Four columns',               regions: 4, cls: 'ly-4col',    cols: [[0], [1], [2], [3]] },
+    { id: '3col-split1',    label: 'Three columns, first split', regions: 4, cls: 'ly-3col-s1', cols: [[0, 1], [2], [3]] },
+    { id: '4col-splitends', label: 'Four columns, ends split',   regions: 6, cls: 'ly-4col-se', cols: [[0, 1], [2], [3], [4, 5]] },
+  ];
+  const DEFAULT_LAYOUT = '3col';
+  const main = document.getElementById('main');
+  const nav = document.getElementById('nav');
+  const brand = document.getElementById('brand');
+
+  let mode = null;
+  let single = DEFAULT_SLOTS[0];
+  let ctxs = [];
+
+  function layoutDef() {
+    const id = State.ui('layout');
+    return LAYOUTS.filter((l) => l.id === id)[0] || LAYOUTS.filter((l) => l.id === DEFAULT_LAYOUT)[0];
+  }
+
+  // the panel shown in region i: the saved choice if it is a real, nav-visible panel; else a sensible
+  // default (also nav-visible), so a region never surfaces a pane the nav has since dropped
+  function slotFor(i) {
+    const vis = {};
+    navPanels().forEach((p) => { vis[p.id] = 1; });
+    const s = State.ui('slots');
+    const id = Array.isArray(s) ? s[i] : null;
+    if (id && Panels.PANELS[id] && vis[id]) return id;
+    const fb = REGION_FALLBACK[i];
+    if (fb && Panels.PANELS[fb] && vis[fb]) return fb;
+    const first = navPanels()[0];
+    return first ? first.id : (fb || 'overview');
+  }
+  function setSlot(i, id) {
+    const lay = layoutDef();
+    const s = [];
+    for (let k = 0; k < lay.regions; k++) s[k] = (k === i) ? id : slotFor(k);
+    State.ui('slots', s);
+  }
+  function shownIds() {
+    const lay = layoutDef();
+    const out = [];
+    for (let i = 0; i < lay.regions; i++) out.push(slotFor(i));
+    return out;
+  }
+  // the region the GM last clicked into — where a nav choice opens (else the browsing region, the last)
+  function focusRegion() {
+    const f = State.ui('focus');
+    const lay = layoutDef();
+    return (typeof f === 'number' && f >= 0 && f < lay.regions) ? f : null;
+  }
+
+  // the nav's groups (the system's VttNav: [{ ids }], dividers between) — or one flat group
+  function navGroups() {
+    const g = window.VttNav;
+    return (Array.isArray(g) && g.length) ? g : [{ ids: Panels.list().map((p) => p.id) }];
+  }
+  // the panels the nav shows (and so may be picked into a region): the grouped set, in group order
+  function navPanels() {
+    const seen = {};
+    const out = [];
+    navGroups().forEach((grp) => (grp.ids || []).forEach((id) => {
+      if (!seen[id] && Panels.PANELS[id]) { seen[id] = 1; out.push(Object.assign({ id }, Panels.PANELS[id])); }
+    }));
+    return out;
+  }
+
+  function teardown() {
+    ctxs.splice(0).forEach((c) => c.teardown());
+  }
+
+  function mountSlot(region) {
+    const id = region == null ? single : slotFor(region);
+    const ctx = Panels.makeCtx(open);
+    ctxs.push(ctx);
+    const head = el('div', { class: 'slot-head' }, [el('span', {}, [Panels.PANELS[id] ? Panels.PANELS[id].label : id])]);
+    if (region != null) {
+      const pick = el('select', { class: 'slot-pick', title: 'Show another panel here' });
+      navPanels().forEach((p) => pick.appendChild(el('option', { value: p.id, selected: p.id === id || null }, [p.label])));
+      pick.addEventListener('change', () => { setSlot(region, pick.value); render(); });
+      head.appendChild(pick);
+    }
+    const body = el('div', { class: 'slot-body' });
+    const focused = region != null && focusRegion() === region;
+    const slot = el('section', { class: 'slot slot-' + id + (focused ? ' slot--focus' : ''), 'data-region': region == null ? null : String(region) }, [head, body]);
+    // clicking into a region selects it: a nav choice then opens here (engine/app.js open()). The
+    // outline moves without a re-render, so the panel keeps its state and scroll. On `click`, not
+    // `mousedown`: saving the choice emits state:changed and the panels redraw, and on mousedown
+    // that swapped the button out from under the pointer, so the first click into an unselected
+    // region did nothing (found here at M3; sortilege-vtt-daggerheart has the same handler).
+    if (region != null) {
+      slot.addEventListener('click', () => {
+        if (focusRegion() === region) return;
+        State.ui('focus', region);
+        const prev = main.querySelector('.slot--focus');
+        if (prev) prev.classList.remove('slot--focus');
+        slot.classList.add('slot--focus');
+      });
+    }
+    Panels.mount(body, id, ctx);
+    return slot;
+  }
+
+  function render() {
+    teardown();
+    main.innerHTML = '';
+    mode = window.innerWidth >= WIDE ? 'wide' : 'single';
+    if (mode === 'wide') {
+      const lay = layoutDef();
+      main.className = 'main wide ' + lay.cls;
+      lay.cols.forEach((colRegions) => main.appendChild(el('div', { class: 'slot-col' }, colRegions.map((r) => mountSlot(r)))));
+    } else {
+      main.className = 'main single';
+      main.appendChild(mountSlot(null));
+    }
+    buildNav();
+  }
+
+  function open(id) {
+    if (mode === 'wide') {
+      const lay = layoutDef();
+      // open into the region the GM selected; with none selected, the browsing region (the last)
+      const target = focusRegion() != null ? focusRegion() : (lay.regions - 1);
+      setSlot(target, id);
+      State.ui('focus', target);
+      render();
+      return;
+    }
+    single = id;
+    render();
+    window.scrollTo(0, 0);
+  }
+
+  function setLayout(id) {
+    if (!LAYOUTS.some((l) => l.id === id)) return;
+    State.ui('layout', id);
+    const f = State.ui('focus');
+    const lay = LAYOUTS.filter((l) => l.id === id)[0];
+    if (typeof f === 'number' && f >= lay.regions) State.ui('focus', lay.regions - 1);
+    render();
+  }
+
+  function buildNav() {
+    nav.innerHTML = '';
+    const shown = mode === 'wide' ? shownIds() : [single];
+    navGroups().forEach((grp, gi) => {
+      if (gi) nav.appendChild(el('li', { class: 'nav-sep', 'aria-hidden': 'true' }, []));
+      (grp.ids || []).forEach((id) => {
+        const p = Panels.PANELS[id];
+        if (!p) return;
+        nav.appendChild(el('li', {}, [el('button', { class: 'navbtn' + (shown.indexOf(id) !== -1 ? ' active' : ''), type: 'button', onclick: () => open(id) }, [p.label])]));
+      });
+    });
+    const c = State.state.campaign;
+    brand.innerHTML = '';
+    brand.appendChild(el('div', { class: 'brand-title' }, [CFG.title]));
+    document.title = CFG.title + ' — the GM’s table';
+    brand.appendChild(el('div', { class: 'brand-sub' }, [c.name || 'no campaign']));
+  }
+
+  // `/` focuses the search wherever the Rules panel is mounted
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
+      const slot = main.querySelector('.slot-rules .slot-body');
+      if (!slot) open('rules');
+      const body = main.querySelector('.slot-rules .slot-body');
+      if (body && body.focusSearch) {
+        ev.preventDefault();
+        body.focusSearch();
+      }
+    }
+  });
+
+  let resizeT = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeT);
+    resizeT = setTimeout(() => {
+      const next = window.innerWidth >= WIDE ? 'wide' : 'single';
+      if (next !== mode) render();
+    }, 120);
+  });
+  window.VttBus.on('state:changed', buildNav);
+  // a selection made while no Inspector is on screen brings one into the browsing column
+  window.VttBus.on('select', (sel, meta) => {
+    if (meta && meta.remote) return;
+    if (mode === 'wide' && !main.querySelector('.slot-inspector')) open('inspector');
+    else if (mode === 'single' && single !== 'inspector') open('inspector');
+  });
+
+  // ── session (players on their own devices) ─────────────────────────
+  const Session = window.VttSession;
+  const sc = document.getElementById('session-controls');
+  function buildSession() {
+    if (!sc || !Session) return;
+    sc.innerHTML = '';
+    const s = Session.current();
+    if (!s.active) {
+      const start = el('button', { class: 'btn ghost', type: 'button' }, ['Start session']);
+      start.disabled = !s.configured;
+      start.title = s.configured ? 'Players join by room code' : 'No Worker URL in engine/config.js';
+      start.addEventListener('click', async () => {
+        start.disabled = true;
+        try {
+          await Session.start();
+        } catch (e) {
+          alert(e.message);
+          start.disabled = false;
+        }
+      });
+      sc.appendChild(start);
+      return;
+    }
+    const url = Session.joinUrl();
+    const copy = el('button', { class: 'btn ghost tiny', type: 'button', onclick: () => navigator.clipboard && navigator.clipboard.writeText(url).then(() => { copy.textContent = 'copied'; setTimeout(() => (copy.textContent = 'copy link'), 1500); }) }, ['copy link']);
+    const end = el('button', { class: 'btn ghost tiny', type: 'button', onclick: () => { if (confirm('End the session? Players are disconnected; your campaign stays here.')) Session.leave(); } }, ['end']);
+    const reseed = el('button', { class: 'btn ghost tiny', type: 'button', title: 'Replace the room\'s document with this browser\'s campaign (after restoring a pack)', onclick: () => { if (confirm('Overwrite the room with this browser\'s campaign?')) Session.reseed(); } }, ['reseed']);
+    sc.appendChild(el('div', { class: 'session-code' }, [el('span', { class: 'chip' + (s.connected ? ' on' : '') }, [s.connected ? 'live' : s.status]), el('b', {}, [s.info.code]), el('span', { class: 'muted' }, [` ${Object.keys(s.claims).length} claimed`])]));
+    sc.appendChild(el('div', { class: 'session-url' }, [url]));
+    sc.appendChild(el('div', { class: 'chiprow' }, [copy, reseed, end]));
+  }
+  if (Session) {
+    Session.onChange(buildSession);
+    buildSession();
+  }
+
+  // the table and the player view are separate windows on the same state
+  const wc = document.getElementById('window-controls');
+  if (wc) {
+    wc.appendChild(el('button', { class: 'btn', type: 'button', onclick: () => window.open(CFG.pages.table, CFG.channel + '-table') }, ['Open table']));
+    wc.appendChild(el('button', { class: 'btn ghost', type: 'button', onclick: () => window.open(CFG.pages.table + '?view=player', CFG.channel + '-player') }, ['Open player view']));
+  }
+
+  window.VttApp = { open, render, setLayout, layouts: () => LAYOUTS.map((l) => ({ id: l.id, label: l.label, cols: l.cols })), currentLayout: () => layoutDef().id, mode: () => mode };
+
+  // The veil (PLAYBOOK §4b.3): the GM page may stand behind a warning (VttConfig.gmGate = { title,
+  // text, enter, leave }) — a courtesy to a player who opens /gm/ on the public site, not access
+  // control. Passed once per tab (sessionStorage); "leave" goes back to the site.
+  const gate = CFG.gmGate;
+  if (CFG.title) document.title = CFG.title + ' — the GM’s table';
+  const GATE_KEY = (CFG.storagePrefix || 'sortilege-vtt') + ':gm-gate';
+  let passed = !gate;
+  try { passed = passed || sessionStorage.getItem(GATE_KEY) === '1'; } catch (e) { /* storage off: ask every load */ }
+  if (!passed) {
+    document.body.classList.add('gated');
+    const veil = el('div', { class: 'gm-veil', role: 'dialog', 'aria-modal': 'true' }, [el('div', { class: 'paper gm-veil-box' }, [
+      gate.title ? el('div', { class: 'gm-veil-title' }, [gate.title]) : null,
+      gate.text ? el('p', {}, [gate.text]) : null,
+      el('div', { class: 'chiprow' }, [
+        el('button', { class: 'btn', type: 'button', onclick: () => { try { sessionStorage.setItem(GATE_KEY, '1'); } catch (e) { /* this load only */ } veil.remove(); document.body.classList.remove('gated'); start(); } }, [gate.enter || 'Enter']),
+        el('a', { class: 'btn ghost', href: (CFG.pages && CFG.pages.site) || '../' }, [gate.leave || 'Leave']),
+      ]),
+    ])]);
+    document.body.appendChild(veil);
+  } else start();
+
+  function start() {
+    render();
+    // a deployment's seed fills what its campaign has never had (engine/state.js seed); redraw if it did
+    if (State.seed) State.seed().then((keys) => { if (keys.length) render(); }).catch((e) => window.console && console.warn('[vtt] seed: ' + e.message));
+  }
+})();
