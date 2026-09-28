@@ -9,7 +9,7 @@ The owner **plays** (Paun, and Tiphaine to come); the Gamemaster is someone else
 
 Status words: **PROPOSED** (awaiting the owner), **(owner)** decided, **landed** built and proven.
 
-- **here** — `sortilege-inc/war-of-the-dragon-banners` (empty on GitHub until pushed; **not pushed** — W4).
+- **here** — `sortilege-inc/war-of-the-dragon-banners` (**PUBLIC; LIVE since 2026-09-28** — M5): https://sortilege-inc.github.io/war-of-the-dragon-banners/, Worker https://war-of-the-dragon-banners.sortilege.workers.dev.
 - **upstream** — `sortilege-inc/sortilege-vtt-pendragon6e` (private), remote `upstream`, at `817c758`.
 
 ## What is on disk (read 2026-09-28)
@@ -40,7 +40,7 @@ in play.
 **W3 — (owner) art:** the portraits of Paun, Tiphaine and Branwen, Paun's arms (`CoaMaker.png`), and the Re Artù map
 of Britain, all as `.webp` in `campaign/assets/`. Not used: the Paun–Branwen embrace (hasn't happened in play).
 
-**W4 — (owner) build and commit; push and deploy on the owner's word.** Nothing is pushed. Pushing publishes
+**W4 — (owner, 2026-09-28: "push and deploy") public and live.** Pushing publishes
 upstream's `data/` (the Pendragon books) as the other public instances do.
 
 ## Milestones
@@ -51,7 +51,7 @@ upstream's `data/` (the Pendragon books) as the other public instances do.
 | **M2** | The squires — `campaign/source/extract_foundry.py` (exports → `squires.json`) · `convert_squires.py` (→ `campaign/dsl/squires/*.actor` on `ACTOR "Player Knight"`) · `build/build_layer.sh` (→ `campaign/data/`) · `check_squires.py` | landed 2026-09-28. **build_layer: OK** — 185 strings (675 occurrences) 0 uncovered · 0 short · 0 unsourced; 2 ids, none the corpus's; every reference resolves. **check_squires: OK — 93 checks over 2 squires (and their exports), 0 differ**; **proven by planted faults** in the layer (Paun SIZ 17, Valorous 16, Tiphaine's Family Characteristic dropped, one letter of her background) → 5 reported, exit 1, and in squires.json against the exports (a skill +1, Glory 976) → 2 reported. Paun: HP 32, Glory 1,362, Midsummer Feast 57 Glory (= the table's 19 × 3); Tiphaine: HP 23, Glory 975. The first build found `BOOLEAN TRUE` (the spec writes `true`) had swallowed the next property into a stray block — the gate had not caught it; `check_squires` now fails on any block or missing property |
 | **M3** | The public pages — `campaign/docs/` → `campaign/build/build_docs.py` → `campaign/data/docs.js`; `campaign/site/site.js` (tabs *War of the Dragon Banners · The Chronicle · The squires · Dramatis Personae · The Realm*), `campaign.css` | landed 2026-09-28. **build_docs: OK** — home, 8 chapters, 7 squires, 15 people, 10,965 words; gates names, private, links, words. **Each proven by a planted fault**: *Aemon* → names neither the campaign nor the books use; a player's name on Jenny's page → names someone at the table; chapter 9 → does not exist; a wrong profile id → not in the campaign layer. Browser on 8758: five tabs ahead of the VTT's (books off), robots meta; Paun's page with portrait, arms, *Squire to Sir Eamon* linked, and the sheet from the layer (SIZ 16, Hit Points 32, Weapon Damage 5D6); Tiphaine's sheet; at 375 px scrollWidth 375 on every page (home, chronicle, a chapter, a squire, people, a person, the realm); 0 console errors |
 | **M4** | The table's seed — `campaign/build/build_seed.py` → `campaign/pack/seed.json` | landed 2026-09-28. **build_seed: OK** — party 4: Paun (HP 32, Glory 1,362) and Tiphaine (23, 975) on their layer profiles; Sineda and Drust blank by name. Browser, fresh storage, through the gate's *Enter*: campaign *War of the Dragon Banners*, the four knights, no Adventure pane; Paun in the Inspector "Squire · South Counties (Belgae) · Hit Points 32/32 · Glory 1,362", attacks with their skills; the Hit Points *−* button → 31 in the store, log "Squire Llwyd 'Paun': Hit Points 32 → 31"; 0 console errors |
-| **M5** | Deploy — push, Pages from `main`, the Worker `war-of-the-dragon-banners` | **waiting on the owner** (W4) |
+| **M5** | Deploy — push, Pages from `main`, the Worker `war-of-the-dragon-banners` | **owner, 2026-09-28: "push and deploy"**. Worker `war-of-the-dragon-banners` (version b380e15b) → https://war-of-the-dragon-banners.sortilege.workers.dev, `ALLOWED_ORIGIN` the github.io origin: `GET /session/ABCD` from it → 200 `{"exists":false}`, from a foreign origin → 403 `origin not allowed`; `engine/config.js` names it. `main` pushed; Pages from `main` (`.nojekyll`). Redeploy the Worker (`cd worker && npx wrangler deploy`) after any upstream change to `engine/ops.js` or the system's `ops.js` |
 
 `bash campaign/build/build.sh` runs M2–M4's steps and gates in order.
 

@@ -60,7 +60,7 @@ window.VttConfig = {
     leave: 'Turn back',
   },
   worker: {
-    deployed: '',                      // war-of-the-dragon-banners, once the owner deploys it
+    deployed: 'https://war-of-the-dragon-banners.sortilege.workers.dev',
     local: 'http://localhost:8808',
   },
 };
