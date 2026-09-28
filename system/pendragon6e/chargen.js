@@ -142,7 +142,13 @@
     if (t36) {
       const bonus = num(t36.columns[2]);
       const barred = /Note that “(\w+)” may not be chosen/.exec(src.text('Constructed#2') || '');
-      t36.rows.forEach((r) => { if (!barred || r[1] !== barred[1]) R.families.push({ name: r[1], skill: r[2].replace(/ \(.*\)$/, ''), printed: r[2], bonus }); });
+      R.familyTable = [];
+      t36.rows.forEach((r) => {
+        const f = { roll: num(r[0]), name: r[1], skill: r[2].replace(/ \(.*\)$/, ''), printed: r[2], bonus };
+        R.familyTable.push(f);
+        if (!barred || r[1] !== barred[1]) R.families.push(f);
+      });
+      R.familyBarred = barred ? barred[1] : null;
       if (!barred) missing.push('the Family Characteristic not chosen (Family Characteristic ▸ Constructed)');
     } else missing.push('Table 3.6');
     // "distribute 10 points among your Skills" (Personal Skill Additions) and its Limitations
@@ -200,6 +206,7 @@
     // shield (6 Armor Protection points); a sword, four spears and one lance, a dagger" (Starting Knightly Gear)
     m = grab('Starting Knightly Gear', /knights begin with a (\w+) \([^)]*\), (\w+) \([^)]*\), and ([\w ]+?) \((\d+) Armor Protection points total\); one ([\w ]+?) \((\d+) Armor Protection points\)/, 'the starting armor');
     R.armor = m ? { mail: m[1], textile: m[2], helm: m[3], total: Number(m[4]), shield: m[5], shieldPoints: Number(m[6]) } : null;
+    randomRules(src, R, grab, missing);
     R.horses = src.table('Table 3.8: Starting Horses');
     R.weapons = src.table('Table 8.1: Melee & Brawling Weapons');
     if (!R.horses) missing.push('Table 3.8');
@@ -207,6 +214,167 @@
     return R;
   }
   const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+  // ── the Random method, read from the chapter ───────────────────────
+  // "Pendragon provides three methods of character creation. Players choose one and use only that one
+  // and do not cherrypick parts from the others." (Character Creation) — so a draft is one method or the
+  // other throughout; what the Random method rolls is recorded in the draft (d.rolled), never re-rolled
+  // by the rules, and every other step (Distinctive Features, Skills, Training, being knighted) is the
+  // same for both ("Regardless of whether you are following the Random or Constructed methods",
+  // Personal Skill Additions).
+  const DICE = /(\d*)D(\d+)(?:\s*([+\-–])\s*(\d+))?/i;
+  function dice(s) {
+    const m = DICE.exec(String(s || ''));
+    return m ? { n: m[1] === '' ? 1 : Number(m[1]), sides: Number(m[2]), add: m[3] ? (m[3] === '+' ? 1 : -1) * Number(m[4]) : 0, text: m[0].replace(/\s+/g, '') } : null;
+  }
+  // a roll of a printed expression with an injected die, recorded: { expr, faces, total }
+  function roll(expr, rollSide) {
+    const d = typeof expr === 'string' ? dice(expr) : expr;
+    const faces = [];
+    for (let i = 0; i < d.n; i++) faces.push(rollSide(d.sides));
+    return { expr: d.text, faces, total: faces.reduce((a, b) => a + b, 0) + d.add };
+  }
+  // the row of a table whose first cell's range ("1–5", "6", "19 or more") holds a roll
+  function rowFor(rows, n) {
+    return rows.find((r) => {
+      const t = String(r[0]).replace(/[–−]/g, '-');
+      let m;
+      if ((m = /^(\d+)\s*-\s*(\d+)$/.exec(t))) return n >= Number(m[1]) && n <= Number(m[2]);
+      if ((m = /^(\d+) or more$/.exec(t))) return n >= Number(m[1]);
+      if ((m = /^(\d+) or less$/.exec(t))) return n <= Number(m[1]);
+      return /^\d+$/.test(t) && Number(t) === n;
+    }) || null;
+  }
+  function randomRules(src, R, grab, missing) {
+    const X = (R.random = {});
+    // "Roll the indicated number of dice as shown in Table 3.3 … Cymric characters receive a Cultural
+    // Characteristic Modifier of +3 CON after the rolling is done." (Characteristics ▸ Random Method)
+    const t33 = src.table('Table 3.3: Random Cymric Characteristic Values');
+    X.chars = {};
+    if (t33) t33.rows.forEach((r) => { if (CHARS.indexOf(r[0]) !== -1) X.chars[r[0]] = dice(r[1]) ? r[1] : null; });
+    let m = grab('Random Method', /Cymric characters receive a Cultural Characteristic Modifier of \+(\d+) (SIZ|DEX|STR|CON|APP) after the rolling is done/, 'the Random Cultural Characteristic Modifier');
+    X.culturalChar = m ? { [m[2]]: Number(m[1]) } : {};
+    // Table 3.2: Starting Religion, by its head's die
+    const t32 = src.table('Table 3.2: Starting Religion');
+    X.religion = t32 && dice(t32.columns[0]) ? { die: dice(t32.columns[0]).text, rows: t32.rows } : null;
+    if (!X.religion) missing.push('Table 3.2');
+    // "Roll 2D6+3 for each left-hand Trait, except for Valorous, which is 2D6+8. … If you roll a Religious
+    // Trait …, add +3 to the value … when you roll the opposite of a Religious Trait …, reduce the value you
+    // enter by –3." (Religious Virtues ▸ Random Method)
+    m = grab('Random Method#2', /Roll (\d+D\d+\+\d+) for each left-hand Trait, except for (\w+), which is (\d+D\d+\+\d+)[\s\S]*?add \+(\d+) to the value[\s\S]*?reduce the value you enter by [–-](\d+)/, 'the random Traits');
+    X.traits = m ? { each: m[1], except: m[2], exceptRoll: m[3], religious: Number(m[4]), opposite: Number(m[5]) } : null;
+    // Passions ▸ Random Method: "Knights start with Honor and Homage (Lord) at 2D6+8 and Love (Family),
+    // Hospitality, and Station at 2D6+3. Devotion (Deity) starts at 1D6+2."; "Distribute no more than
+    // another 4D6+1 points"; "All knights of Salisbury begin with the Hate (Saxons) Passion at a value of
+    // 1D6+2."; "you may not raise a Passion above 15"
+    const pt = src.text('Random Method#3') || '';
+    X.passions = [];
+    const start = /Knights start with ([\s\S]*?)\. ([^.]*?) starts at (\d+D\d+\+\d+)\./.exec(pt);
+    if (start) {
+      const grp = /(?:^|\s+and\s+)([^]*?) at (\d+D\d+\+\d+)/g;
+      let g;
+      while ((g = grp.exec(start[1]))) g[1].split(/,\s*(?:and\s+)?|\s+and\s+/).map((x) => x.trim()).filter(Boolean).forEach((n) => X.passions.push({ name: n, roll: g[2] }));
+      X.passions.push({ name: start[2].trim(), roll: start[3] });
+    } else missing.push('the random Passions (Passions ▸ Random Method)');
+    m = /Distribute no more than another (\d+D\d+\+\d+) points/.exec(pt);
+    X.pool = m ? m[1] : null;
+    if (!m) missing.push('the random Passion points');
+    m = /All knights of (\w+) begin with the ([^.]+?) Passion at a value of (\d+D\d+\+\d+)/.exec(pt);
+    X.homeland = m ? { homeland: m[1], name: m[2], roll: m[3] } : null;
+    if (!m) missing.push('the random homeland Passion');
+    m = /may not raise a Passion above (\d+)/.exec(pt);
+    X.passionCap = m ? Number(m[1]) : null;
+    if (!m) missing.push('the random Passions’ cap');
+    // "Roll 1D20 on Table 3.6: Family Characteristics and apply the bonus." (Cultural Skill Modifiers ▸
+    // Random); Gifted: "Roll twice more*" (its row), and its note: "A second roll of 20 means the character
+    // is a Transcendent Beauty …; if both rolls are 20, the Adoration bonus increases to +10."
+    m = grab('Random#2', /Roll (\d*D\d+) on Table 3\.6/, 'the random Family Characteristic');
+    X.family = m ? m[1] : null;
+    const gifted = (R.familyTable || []).find((f) => /Roll twice more/.test(f.printed)) || null;
+    X.gifted = gifted ? { name: gifted.name, roll: gifted.roll, again: 2 } : null;
+    const note = (src.tableNote && src.tableNote('Table 3.6: Family Characteristics')) || '';
+    m = /A second roll of (\d+) means the character is a ([^(]+?) \(/.exec(note);
+    X.giftedSecond = m ? { roll: Number(m[1]), name: m[2].trim() } : null;
+    // Parent's Glory: "roll 6D6 and multiply the result by 100, then add 2,000"
+    m = grab('Parent’s Glory', /roll (\d+D\d+) and multiply the result by ([\d,]+), then add ([\d,]+)/, 'the parent’s Glory roll');
+    R.parentRoll = m ? { roll: m[1], times: num(m[2].replace(/,/g, '')), add: num(m[3].replace(/,/g, '')) } : null;
+    // Quick Family History: "(2D6×100)+2,000 Glory …"; "an additional (3D6×100)+500 Glory. For each full
+    // 500 Glory from this additional Glory, roll once on Table 3.1: Heroic Events."
+    const q = src.text('Quick Family History') || '';
+    m = /start with \((\d+D\d+)×([\d,]+)\)\+([\d,]+) Glory[\s\S]*?additional \((\d+D\d+)×([\d,]+)\)\+([\d,]+) Glory\. For each full ([\d,]+) Glory from this additional Glory, roll once on Table 3\.1/.exec(q);
+    R.quickHistory = m ? { start: { roll: m[1], times: num(m[2].replace(/,/g, '')), add: num(m[3].replace(/,/g, '')) }, more: { roll: m[4], times: num(m[5].replace(/,/g, '')), add: num(m[6].replace(/,/g, '')) }, per: num(m[7].replace(/,/g, '')) } : null;
+    if (!m) missing.push('the Quick Family History');
+    R.heroic = src.table('Table 3.1: Heroic Events');
+  }
+
+  // ── rolling the Random method's parts (the page's die, or a test's) ──
+  // what: 'religion' | 'chars' | 'traits' | 'passions' | 'family'; returns the record the draft keeps
+  function rollPart(R, what, d, rollSide) {
+    const X = R.random;
+    if (what === 'religion') {
+      const r = roll(X.religion.die, rollSide);
+      const row = rowFor(X.religion.rows, r.total);
+      return Object.assign(r, { value: row ? row[1] : null });
+    }
+    if (what === 'chars') { const o = {}; CHARS.forEach((k) => (o[k] = roll(X.chars[k], rollSide))); return o; }
+    if (what === 'traits') {
+      // "Start at the top and work your way down the left column."
+      const o = {};
+      R.pairs.forEach((p) => (o[p.Virtue] = roll(p.Virtue === X.traits.except ? X.traits.exceptRoll : X.traits.each, rollSide)));
+      return o;
+    }
+    if (what === 'passions') {
+      const o = { start: {}, pool: null, homeland: null };
+      X.passions.forEach((p) => (o.start[p.name] = roll(p.roll, rollSide)));
+      if (X.homeland) o.homeland = roll(X.homeland.roll, rollSide);
+      o.pool = roll(X.pool, rollSide);
+      return o;
+    }
+    if (what === 'family') {
+      const first = roll(X.family, rollSide);
+      const out = { rolls: [first] };
+      if (X.gifted && first.total === X.gifted.roll) for (let i = 0; i < X.gifted.again; i++) out.rolls.push(roll(X.family, rollSide));
+      return out;
+    }
+    return null;
+  }
+  // a parent's Glory rolled: "roll 6D6 and multiply the result by 100, then add 2,000"
+  function rollParentGlory(R, rollSide) {
+    const r = roll(R.parentRoll.roll, rollSide);
+    return { rolls: [r], total: r.total * R.parentRoll.times + R.parentRoll.add, events: [] };
+  }
+  // the Quick Family History: the start and the additional Glory, and a Heroic Event (Table 3.1, 1D6)
+  // for each full 500 of the additional ("*Reroll if you already have this event"); a Variable Quest
+  // ("roll 1D6") picks one of the numbered lines beneath it
+  function rollQuickHistory(R, rollSide) {
+    const Q = R.quickHistory;
+    const a = roll(Q.start.roll, rollSide);
+    const b = roll(Q.more.roll, rollSide);
+    const more = b.total * Q.more.times + Q.more.add;
+    const events = [];
+    const rows = R.heroic ? R.heroic.rows : [];
+    const die = R.heroic ? dice(R.heroic.columns[0]) : null;
+    const main = rows.filter((r) => /^\d+$/.test(r[0]));
+    let guard = 0;
+    for (let i = 0; i < Math.floor(more / Q.per) && die && guard < 50; guard++) {
+      const r = roll(die, rollSide);
+      const row = main.find((x) => Number(x[0]) === r.total);
+      if (!row) continue;
+      const starred = /\*/.test(row[2]);
+      if (starred && events.some((e) => e.roll === r.total)) continue;   // "*Reroll if you already have this event"
+      const ev = { roll: r.total, year: row[1], text: row[2] };
+      if (/\(roll 1D6\):?$/.test(row[2])) {
+        const k = rows.indexOf(row);
+        const sub = roll('1D6', rollSide);
+        const line = rows.slice(k + 1).find((x) => !/^\d+$/.test(x[0]) && new RegExp('^' + sub.total + ':').test(x[2]));
+        ev.sub = line ? line[2] : null;
+        ev.subRoll = sub.total;
+      }
+      events.push(ev);
+      i++;
+    }
+    return { rolls: [a, b], total: a.total * Q.start.times + Q.start.add + more, more, events };
+  }
 
   // ── the derived Characteristics (Derived Characteristics, each with its printed Formula) ──
   function derived(c) {
@@ -256,14 +424,29 @@
     const notes = [];
     const pts = (o) => Object.keys(o || {}).reduce((a, k) => a + (Number(o[k]) || 0), 0);
 
-    // Characteristics: the 60 points, then the culture's modifier, then training
+    const random = d.method === 'random';
+    const rolled = d.rolled || {};
+    const need = (what, step, label) => { if (random && !rolled[what]) errors.push({ step, text: 'Roll ' + label + '.' }); return random && rolled[what]; };
+    // the religion: chosen, or rolled on Table 3.2
+    const religion = random ? (rolled.religion ? rolled.religion.value : '') : d.religion;
+    need('religion', 'knight', 'the religion on Table 3.2');
+
+    // Characteristics: the 60 points (Constructed) or Table 3.3's dice (Random), then the culture's
+    // modifier, then training
     const c0 = {};
-    CHARS.forEach((k) => (c0[k] = Number((d.chars || {})[k]) || 0));
-    const charSum = CHARS.reduce((a, k) => a + c0[k], 0);
-    if (charSum !== R.charPoints) errors.push({ step: 'characteristics', text: charSum + ' of ' + R.charPoints + ' points distributed.' });
-    CHARS.forEach((k) => { if (c0[k] < R.charMin || c0[k] > R.charMax) errors.push({ step: 'characteristics', text: k + ' ' + c0[k] + ' is outside ' + R.charMin + '–' + R.charMax + '.' }); });
+    let charSum = null;
+    if (random) {
+      const rc = need('chars', 'characteristics', 'the Characteristics') || {};
+      CHARS.forEach((k) => (c0[k] = rc[k] ? rc[k].total : 0));
+    } else {
+      CHARS.forEach((k) => (c0[k] = Number((d.chars || {})[k]) || 0));
+      charSum = CHARS.reduce((a, k) => a + c0[k], 0);
+      if (charSum !== R.charPoints) errors.push({ step: 'characteristics', text: charSum + ' of ' + R.charPoints + ' points distributed.' });
+      CHARS.forEach((k) => { if (c0[k] < R.charMin || c0[k] > R.charMax) errors.push({ step: 'characteristics', text: k + ' ' + c0[k] + ' is outside ' + R.charMin + '–' + R.charMax + '.' }); });
+    }
+    const culturalChar = random ? R.random.culturalChar : R.culturalChar;
     const c = {};
-    CHARS.forEach((k) => (c[k] = c0[k] + (R.culturalChar[k] || 0)));
+    CHARS.forEach((k) => (c[k] = c0[k] + (culturalChar[k] || 0)));
     // "Later changes to Characteristics do not affect beginning Skill values" (Beginning Values); and
     // "Characteristics raised in this manner do not affect Skill values" (Training & Practice)
     const cSkills = Object.assign({}, c);
@@ -279,9 +462,17 @@
 
     // Traits: each pair as its virtue's value; the religion's virtues, the martial Trait, the one raised,
     // the points; then the Trait training years
-    const favored = R.religions[d.religion] || [];
+    const favored = R.religions[religion] || [];
+    const rt = need('traits', 'traits', 'the Traits') || {};
     const pairs = R.pairs.map((p) => {
       let v = R.traitStart;
+      if (random) {
+        // the roll, +3 for a Religious Trait, –3 for the opposite of one
+        v = rt[p.Virtue] ? rt[p.Virtue].total : R.traitStart;
+        if (rt[p.Virtue] && favored.indexOf(p.Virtue) !== -1) v += R.random.traits.religious;
+        if (rt[p.Virtue] && favored.indexOf(p.Vice) !== -1) v -= R.random.traits.opposite;
+        return { Virtue: p.Virtue, Vice: p.Vice, v };
+      }
       if (favored.indexOf(p.Virtue) !== -1) v = R.traitReligion;
       if (favored.indexOf(p.Vice) !== -1) v = R.traitSum - R.traitReligion;
       if (R.traitMartial && p.Virtue === R.traitMartial.name) v = R.traitMartial.value;
@@ -290,12 +481,12 @@
     const pairOf = (t) => pairs.find((p) => p.Virtue === t || p.Vice === t);
     const side = (p, t) => (p.Virtue === t ? p.v : R.traitSum - p.v);
     const setSide = (p, t, n) => { p.v = p.Virtue === t ? n : R.traitSum - n; };
-    if (d.sixteen) {
+    if (random) { /* the Random method raises no Trait to 16 and distributes no Trait points */ } else if (d.sixteen) {
       const p = pairOf(d.sixteen);
       if (p) setSide(p, d.sixteen, R.traitOne);
     } else errors.push({ step: 'traits', text: 'Raise one Trait to ' + R.traitOne + '.' });
-    const tp = d.traitPoints || {};
-    if (pts(tp) !== R.traitPoints) errors.push({ step: 'traits', text: pts(tp) + ' of ' + R.traitPoints + ' Trait points distributed.' });
+    const tp = random ? {} : d.traitPoints || {};
+    if (!random && pts(tp) !== R.traitPoints) errors.push({ step: 'traits', text: pts(tp) + ' of ' + R.traitPoints + ' Trait points distributed.' });
     Object.keys(tp).forEach((t) => {
       const n = Number(tp[t]) || 0;
       const p = pairOf(t);
@@ -308,22 +499,58 @@
     // Passions: the starting ones (a mercenary's Fealty for Homage; Salisbury's Hate), the 15 points,
     // any others named
     const homageName = (n) => (d.knightClass && R.mercenarySwap && /^Mercenary/.test(d.knightClass) && n.indexOf(R.mercenarySwap.from) === 0 ? n.replace(R.mercenarySwap.from, R.mercenarySwap.to) : n);
-    const passions = R.passions.map((p) => ({ Name: homageName(p.name), Value: p.value }));
-    if (R.homelandPassion && (d.homeland || R.homelandDefault) === R.homeland) passions.push({ Name: R.homelandPassion.name, Value: R.homelandPassion.value });
+    const home = d.homeland || R.homelandDefault;
+    let passions;
+    let pool = R.passionPoints;
+    let passionCap = R.passionCap;
+    if (random) {
+      const rp = need('passions', 'passions', 'the Passions') || { start: {} };
+      passions = R.random.passions.map((p) => ({ Name: homageName(p.name), Value: rp.start[p.name] ? rp.start[p.name].total : 0 }));
+      if (R.random.homeland && home === R.random.homeland.homeland) passions.push({ Name: R.random.homeland.name, Value: rp.homeland ? rp.homeland.total : 0 });
+      pool = rp.pool ? rp.pool.total : 0;
+      passionCap = R.random.passionCap;
+    } else {
+      passions = R.passions.map((p) => ({ Name: homageName(p.name), Value: p.value }));
+      if (R.homelandPassion && home === R.homeland) passions.push({ Name: R.homelandPassion.name, Value: R.homelandPassion.value });
+    }
     (d.extraPassions || []).forEach((n) => { if (n && !passions.some((p) => p.Name === n)) passions.push({ Name: n, Value: 0 }); });
     const pp = d.passionPoints || {};
-    if (pts(pp) !== R.passionPoints) errors.push({ step: 'passions', text: pts(pp) + ' of ' + R.passionPoints + ' Passion points distributed.' });
+    // Constructed: "Distribute an additional 15 points"; Random: "Distribute no more than another 4D6+1 points"
+    if (!random && pts(pp) !== pool) errors.push({ step: 'passions', text: pts(pp) + ' of ' + pool + ' Passion points distributed.' });
+    if (random && pts(pp) > pool) errors.push({ step: 'passions', text: pts(pp) + ' Passion points; no more than ' + pool + '.' });
     passions.forEach((p) => {
-      p.Value += Number(pp[p.Name]) || 0;
-      if (p.Value > R.passionCap) errors.push({ step: 'passions', text: p.Name + ' ' + p.Value + ' is above ' + R.passionCap + '.' });
+      const k = Number(pp[p.Name]) || 0;
+      p.Value += k;
+      // "No Passion value may be raised above 15" / "you may not raise a Passion above 15" — a rolled
+      // start may be higher; points may not take it there
+      if (k && p.Value > passionCap) errors.push({ step: 'passions', text: p.Name + ' ' + p.Value + ' is above ' + passionCap + '.' });
+      if (!random && !k && p.Value > passionCap) errors.push({ step: 'passions', text: p.Name + ' ' + p.Value + ' is above ' + passionCap + '.' });
     });
 
     // Skills: Table 3.5's beginning values, the culture's modifiers, the family's, the 10 points
-    const fam = R.families.find((f) => f.name === d.family) || null;
-    if (!fam) errors.push({ step: 'skills', text: 'Choose a Family Characteristic.' });
+    // the Family Characteristic: chosen (Constructed), or rolled on Table 3.6 (Random) — Gifted rolls twice
+    // more, and a second 20 is a Transcendent Beauty
+    let fams = [];
+    let familyName = '';
+    if (random) {
+      const rf = need('family', 'skills', 'the Family Characteristic') || { rolls: [] };
+      const at = (n) => (R.familyTable || []).find((f) => f.roll === n) || null;
+      const first = rf.rolls[0] ? at(rf.rolls[0].total) : null;
+      if (first && R.random.gifted && first.roll === R.random.gifted.roll) {
+        const more = rf.rolls.slice(1).map((r) => at(r.total)).filter(Boolean);
+        fams = more.filter((f) => f.roll !== R.random.gifted.roll);
+        const twenties = more.length - fams.length;
+        familyName = first.name + (fams.length ? ' (' + fams.map((f) => f.name).join(', ') + ')' : '');
+        if (twenties && R.random.giftedSecond) notes.push(familyName + ': a ' + R.random.giftedSecond.name + (twenties > 1 ? ' — both rolls 20' : '') + ' (Table 3.6’s note).');
+      } else if (first) { fams = [first]; familyName = first.name; }
+    } else {
+      const fam = R.families.find((f) => f.name === d.family) || null;
+      if (!fam) errors.push({ step: 'skills', text: 'Choose a Family Characteristic.' });
+      else { fams = [fam]; familyName = fam.name; }
+    }
     const skills = R.skills.map((s) => {
       const b = beginning(s.base, cSkills);
-      const bonus = (R.culturalSkill[s.name] || 0) + (fam && fam.skill === s.name ? fam.bonus : 0);
+      const bonus = (R.culturalSkill[s.name] || 0) + fams.filter((f) => f.skill === s.name).reduce((a, f) => a + f.bonus, 0);
       return { name: s.name, group: s.group, knightly: s.knightly, base: s.base, begin: b, bonus, value: b + bonus, appBased: /APP/.test(s.base) };
     });
     const skillAt = (n) => skills.find((s) => s.name === n);
@@ -435,7 +662,7 @@
       Lord: d.lord || R.lord,
       Class: d.knightClass || '',
       Culture: R.culture,
-      Religion: d.religion || '',
+      Religion: religion || '',
       'Distinctive Features': d.distinctive || '',
       'Current Hit Points': dv['Total Hit Points'],
       Wounds: [],
@@ -447,10 +674,10 @@
       Glory: glory,
       Horses: horses,
       Parents: d.parentName ? [{ Name: d.parentName, Value: Number(d.parentGlory) || 0 }] : [],
-      'Family Characteristic': fam ? fam.name : '',
+      'Family Characteristic': familyName,
     };
-    return { values, errors, notes, derived: dv, skills, pairs, passions, glory: { inherited, knighted: R.knightGlory, fromLord, household: household ? R.householdGlory : 0, total: glory }, chars: c, charsBase: c0, charSum };
+    return { values, errors, notes, method: random ? "random" : "constructed", religion, passionPool: pool, derived: dv, skills, pairs, passions, glory: { inherited, knighted: R.knightGlory, fromLord, household: household ? R.householdGlory : 0, total: glory }, chars: c, charsBase: c0, charSum };
   }
 
-  return { CHARS, round, num, rules, derived, beginning, damage, build };
+  return { CHARS, round, num, rules, derived, beginning, damage, build, dice, roll, rowFor, rollPart, rollParentGlory, rollQuickHistory };
 });

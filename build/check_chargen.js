@@ -8,6 +8,9 @@
 //     allows — his religion's six virtues, Valorous raised to 16, six points — come out as printed;
 //     his untrained Skills equal Table 3.5's beginning values plus the culture's and his family's; his
 //     attacks' damage from Table 8.1 and his Weapon and Brawling Damage.
+//  3b. The Random method: its rules as read (each sentence quoted and found), and its parts rolled with
+//     scripted dice — the religion, the Characteristics, a Pagan's Traits (+3 / –3), the Passions and
+//     their pool, Gifted's two more rolls, the parent's Glory and the Quick Family History.
 //  4. Every printed knight (the Core's six, the Starter's eight folios): its Health and Other panels
 //     derived from its printed Characteristics. A knight the rules cannot explain is listed; the count
 //     may not change (KNOWN_UNEXPLAINED).
@@ -46,6 +49,7 @@ const src = {
     if (!t) return null;
     return { columns: val(t, 'Columns'), rows: (t.children || []).map((k) => E[k]).filter((r) => r.type === 'Table Row').map((r) => val(r, 'Cells')) };
   },
+  tableNote: (n) => { const t = core.find((e) => e.type === 'Table' && e.name === n); return t ? val(t, 'Note') || '' : ''; },
   pairs: () => core.filter((e) => e.type === 'Trait Pair').map((e) => ({ Virtue: val(e, 'Virtue'), Vice: val(e, 'Vice') })),
   courts: () => core.filter((e) => e.type === 'Passion Court').map((e) => ({ name: e.name, Passions: val(e, 'Passions') })),
 };
@@ -115,6 +119,65 @@ const charge = src.table('Table 3.8: Starting Horses').rows.find((r) => r[0] ===
 const printedAttacks = {};
 val(hardy, 'Attacks').forEach((a) => (printedAttacks[a.Weapon] = a.Damage.replace(/[†*]/g, '')));
 ['Arming Sword', 'Great Mace', 'Lance', 'Spear', 'Dagger'].forEach((w) => check('the Hardy Knight’s ' + w, G.damage(wrow(w)[4], dv, charge), printedAttacks[w]));
+
+// ── 3b. the Random method ──────────────────────────────────────────
+said('Roll the indicated number of dice as shown in Table 3.3: Random Cymric Characteristic Values. Cymric characters receive a Cultural Characteristic Modifier of +3 CON after the rolling is done.');
+said('Roll 2D6+3 for each left-hand Trait, except for Valorous, which is 2D6+8.');
+said('If you roll a Religious Trait (such as Merciful for Christian characters), add +3 to the value when you enter it. (Random values may start higher than 15.) Conversely, when you roll the opposite of a Religious Trait (such as Modest for Pagan characters), reduce the value you enter by –3.');
+said('Knights start with Honor and Homage (Lord) at 2D6+8 and Love (Family), Hospitality, and Station at 2D6+3. Devotion (Deity) starts at 1D6+2.');
+said('Distribute no more than another 4D6+1 points among the obligatory Passions and any others chosen at this time.');
+said('All knights of Salisbury begin with the Hate (Saxons) Passion at a value of 1D6+2.');
+said('While distributing points, you may not raise a Passion above 15.');
+said('Roll 1D20 on Table 3.6: Family Characteristics and apply the bonus.');
+said('roll 6D6 and multiply the result by 100, then add 2,000');
+const X = R.random;
+check('Random: Table 3.3 and the modifier', [X.chars, X.culturalChar], [{ SIZ: '2D6+5', DEX: '2D6+5', STR: '2D6+5', CON: '2D6+5', APP: '2D6+5' }, { CON: 3 }]);
+check('Random: Table 3.2', [X.religion.die, X.religion.rows], ['1D6', [['1–5', 'Christian'], ['6', 'Pagan']]]);
+check('Random: the Traits', X.traits, { each: '2D6+3', except: 'Valorous', exceptRoll: '2D6+8', religious: 3, opposite: 3 });
+check('Random: the Passions', [X.passions.map((p) => p.name + ' ' + p.roll), X.pool, X.homeland, X.passionCap],
+  [['Honor 2D6+8', 'Homage (Lord) 2D6+8', 'Love (Family) 2D6+3', 'Hospitality 2D6+3', 'Station 2D6+3', 'Devotion (Deity) 1D6+2'], '4D6+1', { homeland: 'Salisbury', name: 'Hate (Saxons)', roll: '1D6+2' }, 15]);
+check('Random: the family, Gifted, the parent’s Glory', [X.family, X.gifted, X.giftedSecond, R.parentRoll], ['1D20', { name: 'Gifted', roll: 20, again: 2 }, { roll: 20, name: 'Transcendent Beauty' }, { roll: '6D6', times: 100, add: 2000 }]);
+check('the Quick Family History', R.quickHistory, { start: { roll: '2D6', times: 100, add: 2000 }, more: { roll: '3D6', times: 100, add: 500 }, per: 500 });
+// scripted dice: each roll takes the next face
+const die = (faces) => { let i = 0; return () => faces[i++]; };
+const ones = () => 1;
+check('Table 3.2: a 6 is Pagan, a 5 Christian', [G.rollPart(R, 'religion', {}, die([6])).value, G.rollPart(R, 'religion', {}, die([5])).value], ['Pagan', 'Christian']);
+const rc = G.rollPart(R, 'chars', {}, die([1, 2, 3, 4, 5, 6, 6, 6, 2, 2]));
+check('the Characteristics rolled (2D6+5, top to bottom)', G.CHARS.map((k) => rc[k].total), [8, 12, 16, 17, 9]);
+const rtr = G.rollPart(R, 'traits', {}, ones);
+const rpa = G.rollPart(R, 'passions', {}, ones);
+const rolledKnight = (extra) => G.build(R, Object.assign({
+  method: 'random', name: 'Sir Random', knightClass: 'Household Knight',
+  rolled: { religion: { value: 'Pagan', faces: [6], total: 6 }, chars: rc, traits: rtr, passions: rpa, family: { rolls: [{ faces: [10], total: 10 }] } },
+  passionPoints: { Honor: 1 }, skillPoints: { Battle: 5, Hunting: 5 }, training: [], age: 21,
+}, extra || {}));
+const rk = rolledKnight();
+check('Random: no error', rk.errors, []);
+check('Random: the Characteristics with +3 CON', G.CHARS.map((k) => rk.values[k]), [8, 12, 16, 20, 9]);
+// all ones: 2D6+3 = 5, Valorous 2D6+8 = 10; Pagan: its virtues +3 (Energetic 8), the opposites of its
+// Religious Traits –3 (Chaste 2 — Lustful is Pagan's; Modest 2)
+check('Random: the Traits, a Pagan’s', rk.values.Traits.map((t) => t.Virtue + ' ' + t['Virtue Value']),
+  ['Chaste 2', 'Energetic 8', 'Forgiving 5', 'Generous 8', 'Honest 8', 'Just 5', 'Merciful 5', 'Modest 2', 'Prudent 5', 'Spiritual 8', 'Temperate 5', 'Trusting 5', 'Valorous 10']);
+check('Random: the Passions (all ones) and the pool', [rk.values.Passions.map((p) => p.Name + ' ' + p.Value), rk.passionPool],
+  [['Honor 11', 'Homage (Lord) 10', 'Love (Family) 5', 'Hospitality 5', 'Station 5', 'Devotion (Deity) 3', 'Hate (Saxons) 3'], 5]);
+check('Random: more points than the pool', rolledKnight({ passionPoints: { 'Love (Family)': 6 } }).errors.map((e) => e.text), ['6 Passion points; no more than 5.']);
+const high = G.rollPart(R, 'passions', {}, () => 6);
+check('Random: a rolled start above 15 stands; points may not raise it', [
+  G.build(R, { method: 'random', rolled: { religion: { value: 'Pagan' }, chars: rc, traits: rtr, passions: high, family: { rolls: [{ total: 10 }] } }, passionPoints: {}, skillPoints: { Battle: 5, Hunting: 5 } }).errors.filter((e) => e.step === 'passions').length,
+  G.build(R, { method: 'random', rolled: { religion: { value: 'Pagan' }, chars: rc, traits: rtr, passions: high, family: { rolls: [{ total: 10 }] } }, passionPoints: { Honor: 1 }, skillPoints: { Battle: 5, Hunting: 5 } }).errors.filter((e) => e.step === 'passions').map((e) => e.text)],
+  [0, ['Honor 21 is above 15.']]);
+check('Random: Family Characteristic 10 is Clever, +3 Gaming', [rk.values['Family Characteristic'], rk.skills.find((x) => x.name === 'Gaming').value], ['Clever', 8]);
+const gifted = G.rollPart(R, 'family', {}, die([20, 3, 20]));
+check('Random: a 20 is Gifted and rolls twice more', gifted.rolls.map((r) => r.total), [20, 3, 20]);
+const gk = rolledKnight({ rolled: { religion: { value: 'Pagan' }, chars: rc, traits: rtr, passions: rpa, family: gifted } });
+check('Random: Gifted (Poetic) and a Transcendent Beauty', [gk.values['Family Characteristic'], gk.skills.find((x) => x.name === 'Compose').value, gk.notes.some((n) => /Transcendent Beauty/.test(n))], ['Gifted (Poetic)', 8, true]);
+check('Random: unrolled parts are errors', G.build(R, { method: 'random', skillPoints: {} }).errors.filter((e) => /^Roll /.test(e.text)).map((e) => e.step), ['knight', 'characteristics', 'traits', 'passions', 'skills']);
+check('the parent’s Glory: 6D6 × 100 + 2,000', G.rollParentGlory(R, ones).total, 2600);
+// Quick Family History: 2D6 = 2 → 2,200; 3D6 = 18 → 2,300 more → 4 Heroic Events: 1, 1 again (starred:
+// rerolled), 2, 5 (Variable Quest, then 3), 4
+const qh = G.rollQuickHistory(R, die([1, 1, 6, 6, 6, 1, 1, 2, 5, 3, 4]));
+check('the Quick Family History', [qh.total, qh.more, qh.events.map((e) => e.roll + (e.subRoll ? '/' + e.subRoll : ''))], [4500, 2300, ['1', '2', '5/3', '4']]);
+check('a Variable Quest’s line', /^3: Killed Jongon the Giant/.test(qh.events[2].sub || ''), true);
 
 // ── 4. every printed knight's Health and Other panels ──────────────
 // the Starter Set's folios print two knights the rules do not reach: Dame Lynelle's Hit Points 28 and
