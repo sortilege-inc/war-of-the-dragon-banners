@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- the tool's own mark (PLAN.md D4: no book art): a heater shield, gules, with a d20's face in or -->
+  <path d="M8 6h48v22c0 16-10 26-24 32C18 54 8 44 8 28z" fill="#9e1b1b" stroke="#221a12" stroke-width="3"/>
+  <path d="M32 14l12 7v14l-12 7-12-7V21z" fill="none" stroke="#e0b75a" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M20 21l12 7 12-7M32 28v14" fill="none" stroke="#e0b75a" stroke-width="2.5" stroke-linejoin="round"/>
+</svg>
