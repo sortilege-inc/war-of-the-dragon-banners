@@ -1,0 +1,36 @@
+EXTENSION "Fixture_Layer" EXTENDS "pendragon6e" {
+    NAME "The layer build's own fixture"
+    VERSION "0.1.0"
+    SPEC_VERSION "0.5"
+    RELEASE_DATE "2026-09-28"
+
+    # Not game content. The smallest layer that exercises every path of build/build_layer.py: one
+    # knight on the corpus's Player Knight chassis with typed-list rows (the references gate), and a
+    # MODIFY and CONCERNS by name on a Passion of the corpus (the names gate). Built only to a
+    # scratch folder by the layer's tests, never into data/.
+
+    MODIFY ^"Hospitality" {
+        GUIDANCE {
+            ENTRY ^"fixture-guidance" #FXLayerFixtureGuide01 {
+                CONCERNS [ ^"Hospitality" ]
+                TOPICS [ "fixture" ]
+                TEXT "A fixture guidance entry, not a rule."
+            }
+        }
+    }
+
+    #FXLayerFixtureKnight01 ^"Fixture Knight" DEF {
+        EXTENDS #pndPlayerKnightActor ^"Player Knight"
+
+        PROPERTIES {
+            ^"Name" STRING "FIXTURE KNIGHT"
+            ^"Passions" LIST OF #pndRatedValue0000000 ^"Rated Value" [
+                DEF { ^"Name" STRING "Hospitality"  ^"Value" INTEGER 10 }
+            ]
+            ^"History" LIST OF #pndHistoryEvent00000 ^"History Event" [
+                DEF { ^"Year" INTEGER 485  ^"Event" STRING "A fixture for the layer build, not a knight." }
+            ]
+            ^"Homeland" STRING "Fixture"
+        }
+    }
+}
