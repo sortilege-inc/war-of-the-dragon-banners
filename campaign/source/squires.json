@@ -1,0 +1,860 @@
+{
+ "paun": {
+  "name": "Squire Llwyd 'Paun'",
+  "file": "fvtt-Actor-squire-llwyd-'paun'-*-kVl1KjMatqwfZ70w.json",
+  "modified": 1778552803840,
+  "stats": {
+   "SIZ": 16,
+   "DEX": 11,
+   "STR": 13,
+   "CON": 16,
+   "APP": 16
+  },
+  "hp": {
+   "max": 32,
+   "current": 32,
+   "knockdown": 16,
+   "major": 16,
+   "unconscious": 8
+  },
+  "move": 17,
+  "healRate": 3,
+  "damage": 5,
+  "armour": 11,
+  "shield": 0,
+  "armourItems": [
+   {
+    "name": "Gambeson",
+    "ap": 4,
+    "equipped": true,
+    "body": true
+   },
+   {
+    "name": "Open Helm",
+    "ap": 1,
+    "equipped": true,
+    "body": true
+   },
+   {
+    "name": "Round Shield",
+    "ap": 6,
+    "equipped": false,
+    "body": false
+   },
+   {
+    "name": "Aketon",
+    "ap": 2,
+    "equipped": true,
+    "body": true
+   },
+   {
+    "name": "Haubergeon",
+    "ap": 4,
+    "equipped": true,
+    "body": true
+   }
+  ],
+  "glory": 1362,
+  "born": 447,
+  "class": "Squire",
+  "culture": "Cymric",
+  "religion": "British Christian",
+  "homeland": "South Counties (Belgae)",
+  "family": "",
+  "features": "Strapping, straight teeth, dulcet voice",
+  "heir": true,
+  "lord": "",
+  "sol": "ordinary",
+  "background": [
+   "Belgae Tribe (will become part of Salisbury)",
+   "Father: Sir Geraint ap Llwyd [GEH-rynt ahp THLOOEED]",
+   "440: Constantine III murdered; Irish extend holdings. Fought at the Battle of the River Parrot against the Irish. Lost his right eye but gained an impressive, distinctive scar. +60 Glory. Developed a mild Suspicion of Atrebates warriors (Passion 7).",
+   "442: Both Gorthyn's father and Paun's father attended the coronation of Constans.",
+   "443: Constans is murdered.",
+   "446: Pict invasion. Fought at the Battle of Lincoln. Distinguished himself despite his dead right eye. +540 Glory..",
+   "447: Vortigern becomes High King. Saxons are given property; the Cymri were not consulted, many driven from their lands. A prelate from the Pope arrives to condemn laxities. Sir Geraint was present when the prelate healed someone of leprosy. +20 Glory.",
+   "448: More Saxons arrive, as does Rowena. When Cymrics complained about favoritism towards the Saxons, Sir Geraint kept his head down.",
+   "449: New foe on the continent: the Huns. Saxons prove useful defense against the Irish, pirates, and Picts. Sir Geraint kept his own counsel despite things getting worse.",
+   "450: Vortigern marries Rowena, gives her father Hengest the entire county of Kent. While hunting in the woodlands, Sir Geraint offended the fae, who cursed our family's hunting (-5 to Hunting rolls).",
+   "454: Fought the Irish in Cornwall. +920 Glory.",
+   "456: Switched allegiance to the dissidents. Fell ill.",
+   "457: Fought at the Battle of Kent on the side of the rebels. Died in battle. +60 Glory (Final Total: 2,282). Developed Hate (Vortigern) 13.",
+   "**Family Legacy (After Sir Geraint's Death)**",
+   "The family remains rebels.",
+   "458: Paun's uncle takes stewardship of the lands. Parts of the extended family pack up and move to Brittany.",
+   "461: Cousin fought at the Battle of Watsom Channel.",
+   "462: Relatives fought at the Battle of Ebbsfleet. Survived.",
+   "463: Uncle killed by Kent Saxons at the Night of the Long Knives.",
+   "**Paun's Inheritance:**",
+   "Hate (Saxons) Passion: rolled 15",
+   "Fae Curse: Hunting -5",
+   "Starting Glory: 570"
+  ],
+  "traits": [
+   {
+    "virtue": "Temperate",
+    "value": 12,
+    "vice": "Indulgent",
+    "opp": 8
+   },
+   {
+    "virtue": "Valorous",
+    "value": 17,
+    "vice": "Cowardly",
+    "opp": 3
+   },
+   {
+    "virtue": "Just",
+    "value": 6,
+    "vice": "Arbitrary",
+    "opp": 14
+   },
+   {
+    "virtue": "Prudent",
+    "value": 13,
+    "vice": "Reckless",
+    "opp": 7
+   },
+   {
+    "virtue": "Honest",
+    "value": 9,
+    "vice": "Deceitful",
+    "opp": 11
+   },
+   {
+    "virtue": "Energetic",
+    "value": 10,
+    "vice": "Lazy",
+    "opp": 10
+   },
+   {
+    "virtue": "Spiritual",
+    "value": 15,
+    "vice": "Worldly",
+    "opp": 5
+   },
+   {
+    "virtue": "Forgiving",
+    "value": 10,
+    "vice": "Vengful",
+    "opp": 10
+   },
+   {
+    "virtue": "Trusting",
+    "value": 10,
+    "vice": "Suspicious",
+    "opp": 10
+   },
+   {
+    "virtue": "Generous",
+    "value": 12,
+    "vice": "Selfish",
+    "opp": 8
+   },
+   {
+    "virtue": "Modest",
+    "value": 16,
+    "vice": "Proud",
+    "opp": 4
+   },
+   {
+    "virtue": "Merciful",
+    "value": 13,
+    "vice": "Cruel",
+    "opp": 7
+   },
+   {
+    "virtue": "Chaste",
+    "value": 13,
+    "vice": "Lustful",
+    "opp": 7
+   }
+  ],
+  "passions": [
+   {
+    "name": "Station",
+    "total": 10
+   },
+   {
+    "name": "Adoration Branwen",
+    "total": 9
+   },
+   {
+    "name": "Chivalry",
+    "total": 7
+   },
+   {
+    "name": "Devotion (God)",
+    "total": 10
+   },
+   {
+    "name": "Love Family",
+    "total": 11
+   },
+   {
+    "name": "Hate Saxons",
+    "total": 8
+   },
+   {
+    "name": "Honour",
+    "total": 17
+   },
+   {
+    "name": "Hospitality",
+    "total": 10
+   }
+  ],
+  "skills": [
+   {
+    "name": "Compose",
+    "total": 5,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Gaming",
+    "total": 5,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Recognize*",
+    "total": 7,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Brawling",
+    "total": 11,
+    "combat": true,
+    "weaponType": "brawling"
+   },
+   {
+    "name": "First Aid*",
+    "total": 6,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Courtesy*",
+    "total": 15,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Play Instrument (Harp)",
+    "total": 13,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Thrown Weapon",
+    "total": 6,
+    "combat": true,
+    "weaponType": "thrown"
+   },
+   {
+    "name": "Awareness*",
+    "total": 7,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Dancing",
+    "total": 6,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Stewardship",
+    "total": 5,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Intrigue",
+    "total": 12,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Fashion",
+    "total": 11,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Charge",
+    "total": 10,
+    "combat": true,
+    "weaponType": "charge"
+   },
+   {
+    "name": "Spear",
+    "total": 6,
+    "combat": true,
+    "weaponType": "spear"
+   },
+   {
+    "name": "Flirting",
+    "total": 13,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Hafted",
+    "total": 6,
+    "combat": true,
+    "weaponType": "hafted"
+   },
+   {
+    "name": "Sword",
+    "total": 11,
+    "combat": true,
+    "weaponType": "sword"
+   },
+   {
+    "name": "Orate",
+    "total": 13,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Battle",
+    "total": 5,
+    "combat": true,
+    "weaponType": ""
+   },
+   {
+    "name": "Falconry",
+    "total": 5,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Hunting*",
+    "total": 7,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Folklore",
+    "total": 11,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Literacy (Ogrham)",
+    "total": 0,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Bow",
+    "total": 6,
+    "combat": true,
+    "weaponType": "bow"
+   },
+   {
+    "name": "Crossbow",
+    "total": 6,
+    "combat": true,
+    "weaponType": "crossbow"
+   },
+   {
+    "name": "Horsemanship",
+    "total": 11,
+    "combat": true,
+    "weaponType": ""
+   },
+   {
+    "name": "Hafted - 2H",
+    "total": 15,
+    "combat": true,
+    "weaponType": "twoHand"
+   },
+   {
+    "name": "Singing",
+    "total": 11,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Religion (Christian)",
+    "total": 5,
+    "combat": false,
+    "weaponType": ""
+   }
+  ],
+  "attacks": [
+   {
+    "weapon": "Dagger",
+    "skill": "Brawling",
+    "value": 11,
+    "damage": "2D6+5"
+   },
+   {
+    "weapon": "Spear (1H)",
+    "skill": "Spear",
+    "value": 6,
+    "damage": "5D6+0"
+   },
+   {
+    "weapon": "Wooden Sword",
+    "skill": "Sword",
+    "value": 11,
+    "damage": "1D6+5"
+   },
+   {
+    "weapon": "Spear (2H)",
+    "skill": "Spear",
+    "value": 6,
+    "damage": "7D6+0"
+   },
+   {
+    "weapon": "Great Mace",
+    "skill": "Hafted - 2H",
+    "value": 15,
+    "damage": "7D6+0"
+   },
+   {
+    "weapon": "Cheap Sword",
+    "skill": "Sword",
+    "value": 11,
+    "damage": "5D6+0"
+   },
+   {
+    "weapon": "Selfbow",
+    "skill": "Bow",
+    "value": 6,
+    "damage": "3D6+0"
+   }
+  ],
+  "history": [
+   {
+    "year": 462,
+    "event": "Midsummer Feast",
+    "glory": 57,
+    "note": [
+     "Paun played harp and sang, and then spoke to one of the knights about falconry (he betrayed his ignorance). Then Branwen asked Paun to dance, and he was so flummoxed that he kept stepping on her toes and apologizing, and she teased him about it."
+    ]
+   },
+   {
+    "year": 463,
+    "event": "Inherited Glory",
+    "glory": 570,
+    "note": []
+   },
+   {
+    "year": 464,
+    "event": "Winter Phase: awarded passive glory",
+    "glory": 80,
+    "note": [
+     "Winter Phase"
+    ]
+   },
+   {
+    "year": 464,
+    "event": "Training and Practice: Just + 1",
+    "glory": 0,
+    "note": [
+     "Training: Just(1)"
+    ]
+   },
+   {
+    "year": 465,
+    "event": "Rescued Merlin from a Bandit Attack",
+    "glory": 50,
+    "note": []
+   },
+   {
+    "year": 465,
+    "event": "Battle of Squire's Hill",
+    "glory": 80,
+    "note": []
+   },
+   {
+    "year": 465,
+    "event": "First Performance of the Lay of Squire's Hill",
+    "glory": 10,
+    "note": [
+     "In the audience was Branwen."
+    ]
+   },
+   {
+    "year": 465,
+    "event": "Fought and killed Barghests",
+    "glory": 100,
+    "note": []
+   },
+   {
+    "year": 465,
+    "event": "Easter Feast of Cameliard",
+    "glory": 80,
+    "note": []
+   },
+   {
+    "year": 465,
+    "event": "Charge on the Saxons at Bambury",
+    "glory": 35,
+    "note": []
+   },
+   {
+    "year": 465,
+    "event": "Killed two giants and barghest",
+    "glory": 200,
+    "note": []
+   },
+   {
+    "year": 465,
+    "event": "Rescue of  Sir Roderick",
+    "glory": 100,
+    "note": []
+   }
+  ]
+ },
+ "tiphaine": {
+  "name": "Squire Tiphaine",
+  "file": "fvtt-Actor-Squire-Tiphaine-Character-Creation.json",
+  "modified": 1778764261096,
+  "stats": {
+   "SIZ": 11,
+   "DEX": 12,
+   "STR": 10,
+   "CON": 12,
+   "APP": 14
+  },
+  "hp": {
+   "max": 23,
+   "current": 23,
+   "knockdown": 11,
+   "major": 12,
+   "unconscious": 6
+  },
+  "move": 16,
+  "healRate": 2,
+  "damage": 4,
+  "armour": 0,
+  "shield": 0,
+  "armourItems": [],
+  "glory": 975,
+  "born": 451,
+  "class": "",
+  "culture": "Breton/Roman",
+  "religion": "Roman Christian",
+  "homeland": "",
+  "family": "Bird-lover",
+  "features": "Charming accent, petite",
+  "heir": false,
+  "lord": "",
+  "sol": "ordinary",
+  "background": [
+   "Tiphaine merc'h Riwall — Theophania, the Appearing of God — was born on the Feast of the Epiphany in 451 at her father's manor of the Three Oaks, in the western marches of Salisbury. She is fourteen and small for her age, with long flaxen hair gone wavy at the temples and plaited loose over one shoulder, grey eyes set wide and watchful, and a fine scatter of freckles across the bridge of her nose. Her mouth rarely settles into a smile. Her bearing is self-contained, almost preternaturally still; she does not waste motion. Her Cymric is fluent but unmistakably foreign — vowels rounded where they should be flat — and people are always telling her it is charming, which she finds irritating.",
+   "Her father was Sir Riwall ap Hoel, a Breton knight of Armorican descent who came to Logres as a young man and won his small manor from the previous Earl of Salisbury through good service in the field. He was a keen huntsman and a great keeper of hawks — the family characteristic of bird-lover runs through him and his daughter both — and he taught Tiphaine to ride, to track, to shoot a bow, and to fly her goshawk Argantia herself. He died at Cambridge thirteen months ago, alongside his Earl and the rest of those who rose against Vortigern's tyranny. His body was not recovered. Tiphaine wears his hunting knife at her belt, the only thing of his she has.",
+   "Her mother was Lady Marina Aureliana of the chalk-downs Romano-British family, devoutly Roman Christian and tirelessly committed to making her daughter the polished young lady the Aureliani required. From her, Tiphaine has her Latin — both spoken and written, an exceptional gift her mother completed teaching before she died of a winter fever five years ago — her saints, her prayers, her courtly graces, and her habit of careful hands and clean nails. Her younger brother Donatien, age six, is currently fostered with their mother's family. She has not seen him since their father's death and she loves him beyond measure; he is the second-strongest thing in her soul, just under her honour. She writes to him in Latin every fortnight when she can find a courier. He is not yet able to respond.",
+   "Tiphaine is a devout girl with strong walls. The Christian virtues her mother trained into her — modesty, chastity, mercy, forgiveness, temperance, spirituality — are genuinely dominant; she is, at her core, more Forgiving than Vengeful even regarding her father's death, and she is unfailingly Modest in a way that keeps her honour from ever sounding like priggishness. But she has also learned, in the year since her father died, to be guarded, suspicious, and to keep what is hers. She watches everyone. She trusts no one yet. She prays in Latin before she eats and before she sleeps, and she does not weep where anyone can see her, and she finds the forest the only place her face feels like her own. She is also, beneath the wall, capable of the full courtly performance her mother prepared her for — courteous, charming, eloquent — and she chooses, mostly, not to deploy any of it.",
+   "She came to be squired through her uncle Lord Konan's letter from Armorica, a formality he completed at distance to be done with her. She arrived at Sarum with two saddlebags and a hooded hawk on her fist."
+  ],
+  "traits": [
+   {
+    "virtue": "Temperate",
+    "value": 13,
+    "vice": "Indulgent",
+    "opp": 7
+   },
+   {
+    "virtue": "Valorous",
+    "value": 12,
+    "vice": "Cowardly",
+    "opp": 8
+   },
+   {
+    "virtue": "Just",
+    "value": 8,
+    "vice": "Arbitrary",
+    "opp": 12
+   },
+   {
+    "virtue": "Prudent",
+    "value": 11,
+    "vice": "Reckless",
+    "opp": 9
+   },
+   {
+    "virtue": "Honest",
+    "value": 12,
+    "vice": "Deceitful",
+    "opp": 8
+   },
+   {
+    "virtue": "Energetic",
+    "value": 11,
+    "vice": "Lazy",
+    "opp": 9
+   },
+   {
+    "virtue": "Spiritual",
+    "value": 13,
+    "vice": "Worldly",
+    "opp": 7
+   },
+   {
+    "virtue": "Forgiving",
+    "value": 13,
+    "vice": "Vengful",
+    "opp": 7
+   },
+   {
+    "virtue": "Trusting",
+    "value": 7,
+    "vice": "Suspicious",
+    "opp": 13
+   },
+   {
+    "virtue": "Generous",
+    "value": 8,
+    "vice": "Selfish",
+    "opp": 12
+   },
+   {
+    "virtue": "Modest",
+    "value": 15,
+    "vice": "Proud",
+    "opp": 5
+   },
+   {
+    "virtue": "Merciful",
+    "value": 11,
+    "vice": "Cruel",
+    "opp": 9
+   },
+   {
+    "virtue": "Chaste",
+    "value": 13,
+    "vice": "Lustful",
+    "opp": 7
+   }
+  ],
+  "passions": [
+   {
+    "name": "Station",
+    "total": 8
+   },
+   {
+    "name": "Chivalry",
+    "total": 9
+   },
+   {
+    "name": "Devotion (Deity)",
+    "total": 12
+   },
+   {
+    "name": "Love Family",
+    "total": 18
+   },
+   {
+    "name": "Hate Saxons",
+    "total": 14
+   },
+   {
+    "name": "Honour",
+    "total": 19
+   },
+   {
+    "name": "Hospitality",
+    "total": 14
+   }
+  ],
+  "skills": [
+   {
+    "name": "Compose",
+    "total": 5,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Gaming",
+    "total": 5,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Recognize",
+    "total": 5,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Brawling",
+    "total": 5,
+    "combat": true,
+    "weaponType": "brawling"
+   },
+   {
+    "name": "First Aid",
+    "total": 9,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Courtesy",
+    "total": 9,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Play Instrument (Harp)",
+    "total": 6,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Thrown Weapon",
+    "total": 6,
+    "combat": true,
+    "weaponType": "thrown"
+   },
+   {
+    "name": "Awareness",
+    "total": 9,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Dancing",
+    "total": 6,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Stewardship",
+    "total": 8,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Intrigue",
+    "total": 9,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Fashion",
+    "total": 9,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Charge",
+    "total": 6,
+    "combat": true,
+    "weaponType": "charge"
+   },
+   {
+    "name": "Spear",
+    "total": 6,
+    "combat": true,
+    "weaponType": "spear"
+   },
+   {
+    "name": "Flirting",
+    "total": 9,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Hafted",
+    "total": 6,
+    "combat": true,
+    "weaponType": "hafted"
+   },
+   {
+    "name": "Sword",
+    "total": 6,
+    "combat": true,
+    "weaponType": "sword"
+   },
+   {
+    "name": "Orate",
+    "total": 9,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Battle",
+    "total": 5,
+    "combat": true,
+    "weaponType": ""
+   },
+   {
+    "name": "Falconry",
+    "total": 9,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Hunting",
+    "total": 5,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Folklore",
+    "total": 9,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Literacy (Latin)",
+    "total": 9,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Bow",
+    "total": 9,
+    "combat": true,
+    "weaponType": "bow"
+   },
+   {
+    "name": "Crossbow",
+    "total": 6,
+    "combat": true,
+    "weaponType": "crossbow"
+   },
+   {
+    "name": "Horsemanship",
+    "total": 6,
+    "combat": true,
+    "weaponType": ""
+   },
+   {
+    "name": "Hafted - 2H",
+    "total": 6,
+    "combat": true,
+    "weaponType": "twoHand"
+   },
+   {
+    "name": "Religion (Christian)",
+    "total": 7,
+    "combat": false,
+    "weaponType": ""
+   },
+   {
+    "name": "Singing",
+    "total": 5,
+    "combat": false,
+    "weaponType": ""
+   }
+  ],
+  "attacks": [],
+  "history": [
+   {
+    "year": 463,
+    "event": "Inherited Glory",
+    "glory": 975,
+    "note": []
+   }
+  ]
+ }
+}

@@ -1,0 +1,80 @@
+{
+ "kind": "sortilege-vtt-campaign",
+ "version": 1,
+ "party": [
+  {
+   "id": "wdb-member-paun",
+   "templateId": "#wdbSquirePaun0000001",
+   "name": "Squire Llwyd 'Paun'",
+   "player": "",
+   "profile": "#wdbSquirePaun0000001",
+   "character": null,
+   "source": {
+    "kind": "profile",
+    "id": "#wdbSquirePaun0000001",
+    "book": "campaign"
+   },
+   "live": {
+    "checks": {},
+    "hp": 32,
+    "glory": 1362
+   },
+   "notes": ""
+  },
+  {
+   "id": "wdb-member-tiphaine",
+   "templateId": "#wdbSquireTiphaine001",
+   "name": "Squire Tiphaine",
+   "player": "",
+   "profile": "#wdbSquireTiphaine001",
+   "character": null,
+   "source": {
+    "kind": "profile",
+    "id": "#wdbSquireTiphaine001",
+    "book": "campaign"
+   },
+   "live": {
+    "checks": {},
+    "hp": 23,
+    "glory": 975
+   },
+   "notes": ""
+  },
+  {
+   "id": "wdb-member-sineda",
+   "templateId": "blank",
+   "name": "Sineda",
+   "player": "",
+   "profile": null,
+   "character": {
+    "Name": "Sineda"
+   },
+   "source": {
+    "kind": "blank"
+   },
+   "live": {
+    "glory": 0,
+    "checks": {}
+   },
+   "notes": ""
+  },
+  {
+   "id": "wdb-member-drust",
+   "templateId": "blank",
+   "name": "Drust",
+   "player": "",
+   "profile": null,
+   "character": {
+    "Name": "Drust"
+   },
+   "source": {
+    "kind": "blank"
+   },
+   "live": {
+    "glory": 0,
+    "checks": {}
+   },
+   "notes": ""
+  }
+ ]
+}

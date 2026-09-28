@@ -1,0 +1,67 @@
+/* campaign/site/campaign.css — War of the Dragon Banners' look: the VTT's parchment tokens re-pointed at
+   the colours of Paun's arms — a sun-gold and a dark blue-green — beside Pendragon's dragon red (loaded
+   after the system's stylesheet by engine/instance.js), and the campaign's own pages (campaign/site/site.js).
+   Upstream files are never edited. */
+:root {
+  --red: #8f1d17;       /* the dragon */
+  --red-bg: #f4ddd5;
+  --blue: #1d4e56;      /* the bend: dark blue-green */
+  --gold: #c8911c;      /* the sun */
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --red: #e0735e;
+    --red-bg: #3a1c17;
+    --blue: #7fc0c7;
+    --gold: #e8b64a;
+  }
+}
+:root[data-theme="dark"] {
+  --red: #e0735e;
+  --red-bg: #3a1c17;
+  --blue: #7fc0c7;
+  --gold: #e8b64a;
+}
+
+.wdb-page { max-width: 48rem; margin: 0 auto; padding: 0 16px 3rem; }
+.wdb-hero { margin: 2rem 0 1rem; padding-bottom: .8rem; border-bottom: 3px double var(--gold); }
+.wdb-title { font-family: var(--display); font-size: clamp(2.1rem, 7vw, 3.4rem); color: var(--red); margin: 0; line-height: 1.05; }
+.wdb-sub { font-family: var(--sans); font-style: italic; color: var(--blue); margin: .35rem 0 0; }
+.wdb-prose { font-family: var(--sans); font-size: 1.12rem; line-height: 1.65; }
+.wdb-prose p { margin: 0 0 .9rem; }
+.wdb-prose h3 { font-family: var(--display); color: var(--blue); margin: 2rem 0 .6rem; font-size: 1.35rem; }
+.wdb-lede p:first-child::first-letter { float: left; font-family: var(--display); font-size: 3.4em; line-height: .85; padding: .06em .08em 0 0; color: var(--red); }
+.wdb-h { font-family: var(--display); color: var(--blue); font-size: 1.4rem; margin: 2rem 0 .6rem; }
+.wdb-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: .8rem; margin: 1.6rem 0; }
+.wdb-card-t { font-family: var(--display); font-size: 1.2rem; margin-bottom: .2rem; }
+.wdb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: .8rem; margin: .8rem 0; }
+.wdb-sq { display: block; background: var(--card); border: 1px solid var(--rule); border-top: 3px solid var(--gold); text-decoration: none; color: inherit; box-shadow: var(--shadow); }
+.wdb-sq:hover { border-top-color: var(--red); }
+.wdb-sq-img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
+.wdb-sq-blank { display: grid; place-items: center; font-family: var(--display); font-size: 3rem; color: var(--blue); background: var(--paper-2); }
+.wdb-sq-n { font-family: var(--display); font-size: 1.2rem; padding: .45rem .6rem 0; }
+.wdb-sq-s { padding: 0 .6rem .55rem; }
+.wdb-toc { font-family: var(--sans); font-size: 1.12rem; line-height: 1.9; padding-left: 1.4rem; }
+.wdb-part { font-family: var(--sans); font-style: italic; margin: -.3rem 0 1.2rem; }
+.wdb-turn { display: flex; justify-content: space-between; gap: 1rem; margin-top: 2.4rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-family: var(--sans); }
+.wdb-head { display: grid; grid-template-columns: minmax(0, 13rem) minmax(0, 1fr); gap: 1.2rem; align-items: start; margin: .6rem 0 1rem; }
+.wdb-head-solo { grid-template-columns: minmax(0, 1fr); }
+.wdb-portrait { width: 100%; aspect-ratio: 1; object-fit: cover; border: 1px solid var(--line); box-shadow: var(--shadow); }
+.wdb-name { margin-top: 0; }
+.wdb-arms { width: 6rem; height: auto; margin-top: .6rem; }
+.wdb-knight { font-family: var(--sans); margin: .2rem 0; }
+.wdb-facts { border-collapse: collapse; font-family: var(--sans); margin: .2rem 0 .4rem; }
+.wdb-facts th { text-align: left; color: var(--blue); font-weight: 600; padding: .15rem 1rem .15rem 0; vertical-align: top; white-space: nowrap; }
+.wdb-facts td { padding: .15rem 0; }
+.wdb-people { display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: .7rem; margin: .6rem 0 1rem; }
+.wdb-person { display: block; padding: .8rem 1rem; background: var(--card); border: 1px solid var(--rule); border-left: 4px solid var(--blue); text-decoration: none; color: inherit; }
+.wdb-person:hover { border-left-color: var(--red); }
+.wdb-person-img { float: right; width: 3rem; height: 3rem; object-fit: cover; border-radius: 50%; margin-left: .5rem; }
+.wdb-person-n { font-family: var(--display); font-size: 1.15rem; }
+.wdb-in { font-family: var(--sans); }
+.wdb-map { display: block; }
+.wdb-map-img { display: block; width: 100%; height: auto; border: 1px solid var(--line); box-shadow: var(--shadow); }
+@media (max-width: 600px) {
+  .wdb-head { grid-template-columns: minmax(0, 1fr); }
+  .wdb-portrait { max-width: 16rem; }
+}
