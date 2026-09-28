@@ -10,7 +10,8 @@
 //     attacks' damage from Table 8.1 and his Weapon and Brawling Damage.
 //  3b. The Random method: its rules as read (each sentence quoted and found), and its parts rolled with
 //     scripted dice — the religion, the Characteristics, a Pagan's Traits (+3 / –3), the Passions and
-//     their pool, Gifted's two more rolls, the parent's Glory and the Quick Family History.
+//     their pool, Gifted's two more rolls and Transcendent Beauty, the parent's Glory and the Quick Family
+//     History (Table 3.1's second rolls, inline outcomes, rolled years, starred rerolls).
 //  4. Every printed knight (the Core's six, the Starter's eight folios): its Health and Other panels
 //     derived from its printed Characteristics. A knight the rules cannot explain is listed; the count
 //     may not change (KNOWN_UNEXPLAINED).
@@ -50,6 +51,7 @@ const src = {
     return { columns: val(t, 'Columns'), rows: (t.children || []).map((k) => E[k]).filter((r) => r.type === 'Table Row').map((r) => val(r, 'Cells')) };
   },
   tableNote: (n) => { const t = core.find((e) => e.type === 'Table' && e.name === n); return t ? val(t, 'Note') || '' : ''; },
+  coreText: (n) => (core.find((e) => e.name === n) || {}).desc || null,
   pairs: () => core.filter((e) => e.type === 'Trait Pair').map((e) => ({ Virtue: val(e, 'Virtue'), Vice: val(e, 'Vice') })),
   courts: () => core.filter((e) => e.type === 'Passion Court').map((e) => ({ name: e.name, Passions: val(e, 'Passions') })),
 };
@@ -170,14 +172,36 @@ check('Random: Family Characteristic 10 is Clever, +3 Gaming', [rk.values['Famil
 const gifted = G.rollPart(R, 'family', {}, die([20, 3, 20]));
 check('Random: a 20 is Gifted and rolls twice more', gifted.rolls.map((r) => r.total), [20, 3, 20]);
 const gk = rolledKnight({ rolled: { religion: { value: 'Pagan' }, chars: rc, traits: rtr, passions: rpa, family: gifted } });
-check('Random: Gifted (Poetic) and a Transcendent Beauty', [gk.values['Family Characteristic'], gk.skills.find((x) => x.name === 'Compose').value, gk.notes.some((n) => /Transcendent Beauty/.test(n))], ['Gifted (Poetic)', 8, true]);
+said('When generating an Adoration Passion for a character with Transcendent Beauty, add +5 to the random roll.');
+check('Transcendent Beauty’s bonus, read', X.beauty, { one: 5, both: 10 });
+check('Random: Gifted (Poetic), a Transcendent Beauty kept on the knight', [gk.values['Family Characteristic'], gk.skills.find((x) => x.name === 'Compose').value, gk.notes.some((n) => /Involuntary Adoration/.test(n))], ['Gifted (Poetic) — Transcendent Beauty (+5)', 8, true]);
+const both = rolledKnight({ rolled: { religion: { value: 'Pagan' }, chars: rc, traits: rtr, passions: rpa, family: G.rollPart(R, 'family', {}, die([20, 20, 20])) } });
+check('Random: both rolls 20 — +10', both.values['Family Characteristic'], 'Gifted — Transcendent Beauty (+10)');
 check('Random: unrolled parts are errors', G.build(R, { method: 'random', skillPoints: {} }).errors.filter((e) => /^Roll /.test(e.text)).map((e) => e.step), ['knight', 'characteristics', 'traits', 'passions', 'skills']);
 check('the parent’s Glory: 6D6 × 100 + 2,000', G.rollParentGlory(R, ones).total, 2600);
-// Quick Family History: 2D6 = 2 → 2,200; 3D6 = 18 → 2,300 more → 4 Heroic Events: 1, 1 again (starred:
-// rerolled), 2, 5 (Variable Quest, then 3), 4
-const qh = G.rollQuickHistory(R, die([1, 1, 6, 6, 6, 1, 1, 2, 5, 3, 4]));
-check('the Quick Family History', [qh.total, qh.more, qh.events.map((e) => e.roll + (e.subRoll ? '/' + e.subRoll : ''))], [4500, 2300, ['1', '2', '5/3', '4']]);
-check('a Variable Quest’s line', /^3: Killed Jongon the Giant/.test(qh.events[2].sub || ''), true);
+// Quick Family History: 2D6 = 2 → 2,200; 3D6 = 18 → 2,300 more → 4 Heroic Events.
+// (a) Table 3.1's "Second roll:": a 1, a 1 again (its second part), a third 1 (the starred second part
+// already had: rolled again, not counted), a 2, then a 4 — the Saxon Raid: its 1D6 (4) picks the damsel,
+// its year 498+1d6 (3) is 501
+const ev = (e) => (e.year || '') + ' ' + (e.head ? e.head + ' ' : '') + e.text;
+const qa = G.rollQuickHistory(R, die([1, 1, 6, 6, 6, 1, 1, 1, 2, 4, 4, 3]));
+check('the Quick Family History: Glory', [qa.total, qa.more], [4500, 2300]);
+check('Heroic Events: a second roll, a reroll, the Saxon Raid', qa.events.map(ev), [
+  '484 Battle of Mount Damen.',
+  '484 Second roll: Rescued Count Roderick in the Battle of Eburacum.*',
+  '490 Battle of Lindsey.',
+  '501 Saxon Raid (roll 1D6): 4: Rescued a damsel, killing her kidnappers (her family owes an F2D3 Favor).',
+]);
+// (b) a 6 — Variable Battle of..., its 1D6 (3) picks Sarum and its year (the third printed, 505); a 5 —
+// Variable Quest, its line 3; a 6 and 3 again (starred, had: rolled again); a 5 and 5; a 4 and 1 — the
+// Raid's "1–3", its year 498 + 2
+const qb = G.rollQuickHistory(R, die([1, 1, 6, 6, 6, 6, 3, 5, 3, 6, 3, 5, 5, 4, 1, 2]));
+check('Heroic Events: Variable Battle, Variable Quest, a starred outcome rerolled, the Raid’s 1–3', qb.events.map(ev), [
+  '505 Variable Battle of... (roll 1d6): 3: Sarum. Wounded King Cerdic badly, but he managed to escape!*',
+  '— Variable Quest (roll 1D6): 3: Killed Jongon the Giant. The surviving giants of his band bear a grudge against the family.*',
+  '— Variable Quest (roll 1D6): 5: Escorted Princess Morgan safely up north to her wedding to King Uriens of Gorre and saved her from peril along the way. She does not forget it.*',
+  '500 Saxon Raid (roll 1D6): 1–3: Destroyed a Saxon raiding group single-handedly.',
+]);
 
 // ── 4. every printed knight's Health and Other panels ──────────────
 // the Starter Set's folios print two knights the rules do not reach: Dame Lynelle's Hit Points 28 and

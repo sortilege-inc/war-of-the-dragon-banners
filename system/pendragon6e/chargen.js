@@ -305,6 +305,13 @@
     R.quickHistory = m ? { start: { roll: m[1], times: num(m[2].replace(/,/g, '')), add: num(m[3].replace(/,/g, '')) }, more: { roll: m[4], times: num(m[5].replace(/,/g, '')), add: num(m[6].replace(/,/g, '')) }, per: num(m[7].replace(/,/g, '')) } : null;
     if (!m) missing.push('the Quick Family History');
     R.heroic = src.table('Table 3.1: Heroic Events');
+    // Transcendent Beauty's bonus: "When generating an Adoration Passion for a character with Transcendent
+    // Beauty, add +5 to the random roll." (Involuntary Adoration); "if both rolls are 20, the Adoration
+    // bonus increases to +10" (Table 3.6's note)
+    m = /with Transcendent Beauty, add \+(\d+) to the random roll/.exec((src.coreText && src.coreText('Involuntary Adoration')) || '');
+    const m2 = /if both rolls are \d+, the Adoration bonus increases to \+(\d+)/.exec(note);
+    X.beauty = m && m2 ? { one: Number(m[1]), both: Number(m2[1]) } : null;
+    if (!X.beauty) missing.push('Transcendent Beauty’s Adoration bonus (Involuntary Adoration, Table 3.6’s note)');
   }
 
   // ── rolling the Random method's parts (the page's die, or a test's) ──
@@ -343,9 +350,66 @@
     const r = roll(R.parentRoll.roll, rollSide);
     return { rolls: [r], total: r.total * R.parentRoll.times + R.parentRoll.add, events: [] };
   }
-  // the Quick Family History: the start and the additional Glory, and a Heroic Event (Table 3.1, 1D6)
-  // for each full 500 of the additional ("*Reroll if you already have this event"); a Variable Quest
-  // ("roll 1D6") picks one of the numbered lines beneath it
+  // the Quick Family History: the start and the additional Glory, and a Heroic Event (Table 3.1, 1D6) for
+  // each full 500 of the additional. How Table 3.1 prints its events, and how each is read:
+  //   * "Battle of Mount Damen. Second roll: Rescued Count Roderick …*" — the first time the number comes
+  //     up it is the first part, the second time the "Second roll:" part;
+  //   * "Saxon Raid (roll 1D6): 1–3: … 4: … 5: … 6: …" — its outcomes in the cell, each after its number:
+  //     a 1D6 picks one; "Variable Battle of... (roll 1d6): 1: Terrabil. …" likewise, its Year cell
+  //     listing one year per outcome ("491 500 505 505 505 506–507");
+  //   * "Variable Quest (roll 1D6):" — its outcomes on the rows beneath it ("1: Went on …");
+  //   * a Year cell "498+1d6" is rolled;
+  //   * "*Reroll if you already have this event" (the table's note): an outcome marked * that the family
+  //     already has is rolled again, and the roll does not count as an event.
+  function heroicEvent(R, rows, row, had, rollSide) {
+    const k = rows.indexOf(row);
+    const n = Number(row[0]);
+    const cell = row[2];
+    const star = (t) => /\*/.test(t);
+    const key = (x) => n + ':' + x;
+    const ev = { roll: n, year: row[1], head: null, text: cell, key: key('') };
+    let m;
+    const opts = /^(.*?\(roll 1[dD]6\):)\s*(.*)$/.exec(cell);
+    if ((m = /^(.*?)\s*Second roll:\s*(.*)$/.exec(cell))) {
+      // the first part, else the second
+      const second = had.some((h) => h.key === key('first'));
+      ev.text = second ? 'Second roll: ' + m[2] : m[1];
+      ev.key = key(second ? 'second' : 'first');
+    } else if (opts && opts[2]) {
+      // outcomes inline: "1–3: …", "4: …"
+      ev.head = opts[1];
+      const parts = [];
+      const rx = /(?:^|\s)(\d+)(?:[–-](\d+))?: /g;
+      let hit;
+      const marks = [];
+      while ((hit = rx.exec(opts[2]))) marks.push({ at: hit.index + (hit[0].startsWith(' ') ? 1 : 0), lo: Number(hit[1]), hi: Number(hit[2] || hit[1]) });
+      marks.forEach((mk, i) => parts.push({ lo: mk.lo, hi: mk.hi, i, text: opts[2].slice(mk.at, i + 1 < marks.length ? marks[i + 1].at : undefined).trim() }));
+      const sub = roll('1D6', rollSide);
+      const part = parts.find((x) => sub.total >= x.lo && sub.total <= x.hi);
+      ev.sub = sub.total;
+      ev.text = part ? part.text : opts[2];
+      ev.key = key(part ? part.lo : '?');
+      const years = String(row[1]).split(/\s+/).filter(Boolean);
+      if (part && years.length === parts.length) ev.year = years[part.i];
+    } else if (opts) {
+      // outcomes on the rows beneath it
+      ev.head = opts[1];
+      const sub = roll('1D6', rollSide);
+      const line = rows.slice(k + 1).find((x) => !/^\d+$/.test(x[0]) && new RegExp('^' + sub.total + ':').test(x[2]));
+      ev.sub = sub.total;
+      ev.text = line ? line[2] : cell;
+      ev.year = line ? line[1] : row[1];
+      ev.key = key(sub.total);
+    }
+    // a year printed as a roll: "498+1d6"
+    if ((m = /^(\d+)\s*\+\s*(\d*[dD]\d+)$/.exec(String(ev.year)))) {
+      const y = roll(m[2], rollSide);
+      ev.year = String(Number(m[1]) + y.total);
+      ev.yearRoll = y.total;
+    }
+    const again = star(ev.text) && had.some((h) => h.key === ev.key);
+    return again ? null : ev;
+  }
   function rollQuickHistory(R, rollSide) {
     const Q = R.quickHistory;
     const a = roll(Q.start.roll, rollSide);
@@ -355,23 +419,12 @@
     const rows = R.heroic ? R.heroic.rows : [];
     const die = R.heroic ? dice(R.heroic.columns[0]) : null;
     const main = rows.filter((r) => /^\d+$/.test(r[0]));
-    let guard = 0;
-    for (let i = 0; i < Math.floor(more / Q.per) && die && guard < 50; guard++) {
+    const want = Math.floor(more / Q.per);
+    for (let guard = 0; events.length < want && die && guard < 100; guard++) {
       const r = roll(die, rollSide);
       const row = main.find((x) => Number(x[0]) === r.total);
-      if (!row) continue;
-      const starred = /\*/.test(row[2]);
-      if (starred && events.some((e) => e.roll === r.total)) continue;   // "*Reroll if you already have this event"
-      const ev = { roll: r.total, year: row[1], text: row[2] };
-      if (/\(roll 1D6\):?$/.test(row[2])) {
-        const k = rows.indexOf(row);
-        const sub = roll('1D6', rollSide);
-        const line = rows.slice(k + 1).find((x) => !/^\d+$/.test(x[0]) && new RegExp('^' + sub.total + ':').test(x[2]));
-        ev.sub = line ? line[2] : null;
-        ev.subRoll = sub.total;
-      }
-      events.push(ev);
-      i++;
+      const ev = row ? heroicEvent(R, rows, row, events, rollSide) : null;
+      if (ev) events.push(ev);
     }
     return { rolls: [a, b], total: a.total * Q.start.times + Q.start.add + more, more, events };
   }
@@ -541,7 +594,13 @@
         fams = more.filter((f) => f.roll !== R.random.gifted.roll);
         const twenties = more.length - fams.length;
         familyName = first.name + (fams.length ? ' (' + fams.map((f) => f.name).join(', ') + ')' : '');
-        if (twenties && R.random.giftedSecond) notes.push(familyName + ': a ' + R.random.giftedSecond.name + (twenties > 1 ? ' — both rolls 20' : '') + ' (Table 3.6’s note).');
+        // a second 20 is a Transcendent Beauty, kept on the knight with its Adoration bonus: +5, or +10
+        // when both rolls are 20
+        if (twenties && R.random.giftedSecond) {
+          const b = R.random.beauty ? ' (+' + (twenties > 1 ? R.random.beauty.both : R.random.beauty.one) + ')' : '';
+          familyName += ' — ' + R.random.giftedSecond.name + b;
+          notes.push(familyName + ': when a character first sees them, the Gamemaster may call for an Adoration roll (Involuntary Adoration)' + (b ? '; the Adoration gained adds' + b.replace(/[()]/g, ' ').replace(/\s+$/, '') : '') + '.');
+        }
       } else if (first) { fams = [first]; familyName = first.name; }
     } else {
       const fam = R.families.find((f) => f.name === d.family) || null;
@@ -679,5 +738,5 @@
     return { values, errors, notes, method: random ? "random" : "constructed", religion, passionPool: pool, derived: dv, skills, pairs, passions, glory: { inherited, knighted: R.knightGlory, fromLord, household: household ? R.householdGlory : 0, total: glory }, chars: c, charsBase: c0, charSum };
   }
 
-  return { CHARS, round, num, rules, derived, beginning, damage, build, dice, roll, rowFor, rollPart, rollParentGlory, rollQuickHistory };
+  return { CHARS, round, num, rules, derived, beginning, damage, build, dice, roll, rowFor, rollPart, rollParentGlory, rollQuickHistory, heroicEvent };
 });

@@ -60,6 +60,7 @@ window.PDCreator = (function () {
       return t ? { columns: D.val(t, 'Columns') || [], rows: D.children(t.id).filter((r) => r.type === 'Table Row').map((r) => (D.val(r, 'Cells') || []).map(String)) } : null;
     },
     tableNote: (n) => { const t = coreTyped('Table').find((e) => e.name === n); return t ? D.val(t, 'Note') || '' : ''; },
+    coreText: (n) => (D.named(n, 'core') || {}).desc || null,
     pairs: () => coreTyped('Trait Pair').map((e) => ({ Virtue: D.val(e, 'Virtue'), Vice: D.val(e, 'Vice') })),
     courts: () => coreTyped('Passion Court').map((e) => ({ name: e.name, Passions: D.val(e, 'Passions') || [] })),
   };
@@ -324,7 +325,7 @@ window.PDCreator = (function () {
         ]));
         if (d.parentRolled) box.appendChild(el('div', { class: 'paper small' }, [
           el('div', {}, [(d.parentRolled.how === 'history' ? 'The Quick Family History: ' : 'Rolled: ') + d.parentRolled.rolls.map((x) => x.expr + ' ' + facesOf(x)).join('; ') + ' → ' + d.parentRolled.total.toLocaleString('en') + ' Glory']),
-          (d.parentRolled.events || []).length ? el('ul', { class: 'items' }, d.parentRolled.events.map((e) => el('li', {}, [(e.year ? e.year + ' ' : '') + '(' + e.roll + '): ' + e.text + (e.sub ? ' — ' + e.sub : '')]))) : null,
+          (d.parentRolled.events || []).length ? el('ul', { class: 'items' }, d.parentRolled.events.map((e) => el('li', {}, [(e.year && e.year !== '—' ? e.year + ' ' : '') + '(' + e.roll + (e.sub ? '/' + e.sub : '') + '): ' + (e.head ? e.head + ' ' : '') + e.text]))) : null,
         ]));
         box.appendChild(field('Glory of the lord who knighted them', numIn(() => d.lordGlory, (v) => (d.lordGlory = v), 'Glory of the lord who knighted them', { min: 0, step: 100 })));
         const weapons = R.weapons ? R.weapons.rows.filter((w) => w[2] && w[2] !== 'Weapon Skill' && ['Arming Sword', 'Lance', 'Spear', 'Dagger'].indexOf(w[0]) === -1).map((w) => w[0]) : [];
