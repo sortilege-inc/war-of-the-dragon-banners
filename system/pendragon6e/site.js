@@ -408,6 +408,8 @@ window.VttSiteTabs = (function () {
   return [
     { id: 'book', label: 'The books', render: renderBook, books: true },
     { id: 'knights', label: 'Knights & foes', render: renderKnights },
+    // the creator (system/pendragon6e/creator.js): always shown, books on or off (§4b.4)
+    { id: 'create', label: 'Make a knight', render: (c, path, ctx) => window.PDCreator.render(c, path, ctx) },
     { id: 'traits', label: 'Skills & passions', render: renderTraits },
     { id: 'arms', label: 'Arms & combat', render: renderArms },
     { id: 'glory', label: 'Glory & winter', render: renderGlory },

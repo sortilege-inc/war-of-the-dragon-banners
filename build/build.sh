@@ -18,6 +18,8 @@ echo "--- shape (the fields the site reads, against the corpus's own counts)"
 python3 build/check_shape.py "$CORPUS"
 echo "--- the d20 (the rules replay The Game System's worked examples)"
 node build/check_dice.js
+echo "--- the creator (the chapter's rules read from the corpus; the Hardy Knight; every printed knight's panels)"
+node build/check_chargen.js
 echo "--- syntax"
 for f in data/*.js system/pendragon6e/*.js; do node --check "$f"; done
 echo "build.sh: OK"

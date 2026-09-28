@@ -296,3 +296,19 @@ table.printed.traits td.num { text-align: center; width: 3em; font-variant-numer
 .chiprow.dmg { margin: .6rem 0; align-items: center; }
 .index-list li { break-inside: avoid; }
 .prop-v, .prop-k, .option, .entity, .nested { min-width: 0; }
+
+/* ── the creator ── */
+.creator-steps .chip.warn { border-color: var(--red); }
+.creator-text { margin: .4rem 0 .8rem; }
+.creator-text > summary { cursor: pointer; color: var(--ink-2); }
+.creator-status .errors { color: var(--fail); margin: .4rem 0; }
+.budget { font-family: var(--display); margin: .4rem 0; }
+.budget.ok { color: var(--ok); }
+.budget.over { color: var(--fail); }
+.stepper { display: inline-flex; align-items: center; gap: 2px; }
+.stepper .num { min-width: 2em; text-align: center; }
+.check-name.favored { text-decoration: underline; }
+.creator-traits .trait-row { gap: 4px; }
+.creator-traits .check-name { min-width: 7.5em; }
+.train-row { flex-wrap: wrap; margin: .3rem 0; }
+.creator-go, .creator-done { margin-top: 1rem; }

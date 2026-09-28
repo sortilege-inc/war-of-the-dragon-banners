@@ -502,12 +502,14 @@ window.PDEntity = (function () {
     (e.blocks || []).forEach((b) => {
       if (b && 'ent' in b) inBlocks.add(b.ent);
     });
-    const blk = e.type === 'Table' ? (e.blocks || []).filter((b) => !(b && 'ent' in b && (D.entity(b.ent) || {}).type === 'Table Row')) : e.blocks;
+    // a Table's rows are drawn by the table; a shallow render (the creator's step texts) is the entity's
+    // own text, nothing nested in it
+    const blk = e.type === 'Table' || o.shallow ? (e.blocks || []).filter((b) => !(b && 'ent' in b && (o.shallow || (D.entity(b.ent) || {}).type === 'Table Row'))) : e.blocks;
     if (blk && blk.length) box.appendChild(nodes(blk, bid, o.depth || 0, P));
     guidance(D.guidanceFor(e.id), bid).forEach((g) => box.appendChild(g));
     const er = corrections(e);
     if (er) box.appendChild(er);
-    if (!o.noKids) {
+    if (!o.noKids && !o.shallow) {
       D.children(e.id).filter((k) => !inBlocks.has(k.id) && !(e.type === 'Table' && k.type === 'Table Row')).forEach((k) => box.appendChild(el('div', { class: 'nested' }, [render(k, { depth: (o.depth || 0) + 1 })])));
     }
     return box;
