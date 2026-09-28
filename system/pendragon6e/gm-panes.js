@@ -337,6 +337,8 @@
       const t = el('input', { class: 'text', type: 'text', placeholder: 'Add a scene…', 'aria-label': 'New scene' });
       const addScene = () => {
         if (!t.value.trim()) return;
+        // the pane holds its redraw while a field in it has focus: leave the box, so the new card shows
+        t.blur();
         mutate((l) => l.push({ id: newId('arc'), title: t.value.trim(), session: last, text: '', played: false, beats: [] }));
       };
       t.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') addScene(); });

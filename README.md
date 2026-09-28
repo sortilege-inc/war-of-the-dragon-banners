@@ -21,4 +21,6 @@ corpus prints reaches the data as often as it is printed, and nothing in the dat
 corpus), then checks the shapes the site reads against counts taken from the raw corpus.
 
 Local: the launch entries `vtt-pendragon6e` (8750) and `vtt-pendragon6e-worker` (8805;
-`cd worker && npm ci` first). See `PLAN.md` for the milestones, the decisions and the proof of each.
+`cd worker && npm ci` first). With the Worker running, `tools/check-session.js` proves a session end
+to end (two origins, one room; see its header). See `PLAN.md` for the milestones, the decisions and the
+proof of each.
