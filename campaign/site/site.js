@@ -54,26 +54,67 @@
     ])));
   }
 
-  // ── the chronicle: its contents, then one chapter to a page ──
+  // ── the chronicle: one page, the chapters in a rail beside it (as Physician, Heal Thyself's) ──
+  // #chronicle/<chapter> opens the page at that chapter. A click on the rail scrolls there and rewrites the
+  // address without a hashchange (history.replaceState), so the page is not redrawn. A rail entry is the
+  // chapter's title over its time in the story (its `part` up to the " · ").
+  const when = (c) => String(c.part || '').split(' · ')[0];
   function renderChronicle(container, path, ctx) {
-    const p = page(container);
-    const c = path[0] && DOCS.chronicle.find((x) => x.slug === path[0]);
-    if (!c) {
-      p.appendChild(el('h2', { class: 'chapter-h' }, ['The Chronicle']));
-      p.appendChild(el('ol', { class: 'wdb-toc' }, DOCS.chronicle.map((x) => el('li', {}, [
-        el('a', { href: ctx.href('chronicle', [x.slug]) }, [x.title]), el('span', { class: 'muted small' }, [' · ' + x.part]),
-      ]))));
-      return;
-    }
-    const prev = chapter(c.n - 1), next = chapter(c.n + 1);
-    p.appendChild(crumbs(ctx, 'chronicle', 'The Chronicle', c.title));
-    p.appendChild(el('h2', { class: 'chapter-h wdb-chapter-h' }, [c.title]));
-    p.appendChild(el('div', { class: 'wdb-part muted' }, [c.part]));
-    p.appendChild(prose(c.html, 'wdb-chapter'));
-    p.appendChild(el('nav', { class: 'wdb-turn' }, [
-      prev ? el('a', { href: ctx.href('chronicle', [prev.slug]) }, ['‹ ' + prev.title]) : el('span'),
-      next ? el('a', { href: ctx.href('chronicle', [next.slug]) }, [next.title + ' ›']) : el('span'),
+    const p = el('div', { class: 'page wdb-page wdb-chron-page' });
+    container.appendChild(p);
+    const head = document.querySelector('.site-head');
+    // how much of the top the band holds while scrolling: its height where it sticks, none where it scrolls away
+    const bandH = () => (head && /sticky|fixed/.test(getComputedStyle(head).position) ? head.offsetHeight : 0);
+    p.style.setProperty('--wdb-head', bandH() + 'px');
+    const links = {};
+    const rail = el('nav', { class: 'wdb-rail', 'aria-label': 'Chapters' }, [
+      el('div', { class: 'wdb-rail-h' }, ['The Chronicle']),
+      el('ol', {}, DOCS.chronicle.map((c) => el('li', {}, [links[c.slug] = el('a', {
+        href: ctx.href('chronicle', [c.slug]),
+        onclick: (ev) => { ev.preventDefault(); go(c.slug, true); },
+      }, [el('span', { class: 'wdb-rail-n' }, [c.title]), el('span', { class: 'wdb-rail-s' }, [when(c)])])]))),
+    ]);
+    const sections = DOCS.chronicle.map((c) => el('section', { class: 'wdb-chap', id: 'chapter-' + c.slug, 'data-slug': c.slug }, [
+      el('div', { class: 'wdb-chap-part' }, [c.part]),
+      el('h2', { class: 'chapter-h wdb-chapter-h' }, [c.title]),
+      prose(c.html, 'wdb-chapter'),
     ]));
+    p.appendChild(el('div', { class: 'wdb-chronicle' }, [rail, el('div', { class: 'wdb-chron-text' }, sections)]));
+
+    function mark(slug) {
+      Object.keys(links).forEach((k) => links[k].classList.toggle('on', k === slug));
+      const a = links[slug];
+      if (a && rail.scrollWidth > rail.clientWidth) a.scrollIntoView({ block: 'nearest', inline: 'center' });
+    }
+    function go(slug, smooth) {
+      p.style.setProperty('--wdb-head', bandH() + 'px');
+      const sec = document.getElementById('chapter-' + slug);
+      if (!sec) return;
+      sec.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+      history.replaceState(null, '', ctx.href('chronicle', [slug]));
+      mark(slug);
+    }
+    // the chapter being read: the last one whose top has passed under the band (on a phone, under the rail's bar)
+    const onScroll = () => {
+      if (!document.body.contains(p)) { window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onScroll); return; }
+      // the band's height changes with the width (the tabs fold into a menu on a phone): measure it again
+      p.style.setProperty('--wdb-head', bandH() + 'px');
+      const bar = getComputedStyle(rail).overflowY === 'hidden';
+      const top = (bar ? rail.getBoundingClientRect().bottom : bandH()) + 40;
+      let cur = sections[0].dataset.slug;
+      sections.forEach((s) => { if (s.getBoundingClientRect().top <= top) cur = s.dataset.slug; });
+      // at the foot of the page the last chapter may not reach the top: it is the one being read
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) cur = sections[sections.length - 1].dataset.slug;
+      mark(cur);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    mark(DOCS.chronicle[0].slug);
+    // opened at a chapter: jump there now, and again once the fonts have settled the page's height
+    if (path[0] && DOCS.chronicle.some((c) => c.slug === path[0])) {
+      setTimeout(() => go(path[0], false), 0);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (document.body.contains(p)) go(path[0], false); });
+    }
   }
 
   // ── the squires ──

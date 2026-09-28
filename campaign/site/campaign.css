@@ -65,3 +65,33 @@
   .wdb-head { grid-template-columns: minmax(0, 1fr); }
   .wdb-portrait { max-width: 16rem; }
 }
+
+/* The Chronicle: one page, the chapters in a rail beside it */
+.wdb-chron-page { max-width: 72rem; }
+.wdb-chronicle { display: grid; grid-template-columns: 14rem minmax(0, 1fr); gap: 2rem; align-items: start; margin-top: 1.6rem; }
+.wdb-chron-text { max-width: 46rem; }
+.wdb-rail { position: sticky; top: calc(var(--wdb-head, 64px) + 18px); max-height: calc(100vh - var(--wdb-head, 64px) - 36px); overflow: auto; }
+.wdb-rail-h { font-family: var(--display); font-size: .95rem; letter-spacing: .12em; color: var(--gold); padding: 0 0 .6rem .9rem; border-bottom: 1px solid var(--rule); margin-bottom: .4rem; }
+.wdb-rail ol { list-style: none; margin: 0; padding: 0; }
+.wdb-rail a { display: block; padding: .5rem .6rem .5rem .8rem; border-left: 2px solid var(--rule); text-decoration: none; color: var(--ink-2); transition: color .12s, border-color .12s; }
+.wdb-rail a:hover { color: var(--ink); border-left-color: var(--blue); }
+.wdb-rail a.on { color: var(--ink); border-left-color: var(--red); background: linear-gradient(90deg, var(--red-bg), transparent); }
+.wdb-rail-n { display: block; font-family: var(--display); font-size: 1.1rem; line-height: 1.2; }
+.wdb-rail-s { display: block; font-family: var(--sans); font-size: .8rem; font-style: italic; color: var(--ink-2); margin-top: 2px; }
+.wdb-rail a.on .wdb-rail-s { color: var(--blue); }
+.wdb-chap { scroll-margin-top: calc(var(--wdb-head, 64px) + 14px); }
+.wdb-chap + .wdb-chap { margin-top: 2.4rem; padding-top: 2rem; border-top: 3px double var(--gold); }
+.wdb-chap > h2.chapter-h { margin-top: 0; }
+.wdb-chap-part { font-family: var(--sans); font-size: .82rem; letter-spacing: .1em; text-transform: uppercase; color: var(--blue); margin: 0 0 .3rem; }
+@media (max-width: 900px) {
+  .wdb-chronicle { grid-template-columns: minmax(0, 1fr); gap: .8rem; margin-top: .8rem; }
+  .wdb-rail { top: var(--wdb-head, 56px); z-index: 5; max-height: none; overflow-x: auto; overflow-y: hidden; background: var(--paper); padding: .4rem 0; border-bottom: 1px solid var(--rule); }
+  .wdb-rail-h { display: none; }
+  .wdb-rail ol { display: flex; gap: 4px; }
+  .wdb-rail li { flex: none; }
+  .wdb-rail a { border-left: 0; border-bottom: 2px solid transparent; padding: .35rem .6rem; white-space: nowrap; }
+  .wdb-rail a.on { border-bottom-color: var(--red); background: none; }
+  .wdb-rail-s { display: none; }
+  .wdb-rail-n { font-size: 1rem; }
+  .wdb-chap { scroll-margin-top: calc(var(--wdb-head, 56px) + 60px); }
+}
