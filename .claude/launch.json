@@ -2,16 +2,16 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "vtt-pendragon6e",
+      "name": "dragon-banners",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8750"],
-      "port": 8750
+      "runtimeArgs": ["-m", "http.server", "8758"],
+      "port": 8758
     },
     {
-      "name": "vtt-pendragon6e-worker",
+      "name": "dragon-banners-worker",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["wrangler", "dev", "--port", "8805"],
-      "port": 8805,
+      "runtimeArgs": ["wrangler", "dev", "--port", "8808"],
+      "port": 8808,
       "cwd": "worker"
     }
   ]

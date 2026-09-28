@@ -1,26 +1,23 @@
-# sortilege-vtt-pendragon6e
+# War of the Dragon Banners
 
-A virtual tabletop for **Pendragon, 6th Edition**, generated from the Titterpig corpus
-`titterpig-dsl-pendragon6e/0.5`: the Core Rulebook, the Gamemaster's Handbook, the Noble's
-Handbook and the Starter Set to read, the d20, the knights and stat blocks, and live sessions for
-players on their own devices.
+A **Pendragon, 6th Edition** campaign, begun in November 2025: squires of Salisbury, pages together at
+Sarum, whose fathers died rebelling against Vortigern, chosen as squires by the knights called the Wolves
+of Vagan. After the Night of the Long Knives, Merlin sets them to find a banner for a man who has not yet
+revealed himself.
 
-- `/` — the site: the books, the knights, the skills, traits and passions, the dice, making a
-  knight, search. Writes nothing.
-- `/gm/` — the Gamemaster's table: panels over the campaign, the map table (`gm/vtt.html`), the
-  player's page (`gm/play.html`).
-
-No build step for the pages; `data/` is generated:
+This repo is an **instance** of [`sortilege-vtt-pendragon6e`](https://github.com/sortilege-inc/sortilege-vtt-pendragon6e):
+the VTT owns the root (the site at `/`, the Gamemaster's table at `/gm/`, the player's page, the engine,
+the generated book data); the campaign owns `campaign/` and a few per-deployment root files
+(`.gitattributes`, `merge=ours`).
 
 ```bash
-bash build/build.sh
+git config merge.ours.driver true        # once per clone — the fork boundary needs it
+git fetch upstream && git merge upstream/main   # pull the VTT; a merge, never a rebase
+bash campaign/build/build.sh             # the squires, the public pages, the table's seed
 ```
 
-It parses every corpus file, writes `data/`, and gates the result both ways (every string the
-corpus prints reaches the data as often as it is printed, and nothing in the data is not in the
-corpus), then checks the shapes the site reads against counts taken from the raw corpus.
-
-Local: the launch entries `vtt-pendragon6e` (8750) and `vtt-pendragon6e-worker` (8805;
-`cd worker && npm ci` first). With the Worker running, `tools/check-session.js` proves a session end
-to end (two origins, one room; see its header). See `PLAN.md` for the milestones, the decisions and the
-proof of each.
+The squires with sheets (Paun and Tiphaine) are their Foundry exports (`campaign/source/foundry/`),
+written into the campaign's DSL layer (`campaign/dsl/`) on the corpus's `ACTOR "Player Knight"`, built
+through the books' gate into `campaign/data/`, and checked field by field against the exports.
+Local: the launch entries `dragon-banners` (8758) and `dragon-banners-worker` (8808). The plan, the
+decisions and the proof of each step are in `campaign/PLAN.md`.
