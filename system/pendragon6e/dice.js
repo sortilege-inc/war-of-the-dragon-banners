@@ -180,8 +180,9 @@
         r.result = fixed(mine, r.fixed);
       }
       last = r;
-      draw(r);
+      // reported first, so what it changes (a check it earns) is there when the page draws beneath it
       if (o.onResolve) o.onResolve(r);
+      draw(r);
     };
     box.appendChild(forLine);
     box.appendChild(el('div', { class: 'roller-controls' }, [
