@@ -299,8 +299,11 @@ table.printed.traits td.num { text-align: center; width: 3em; font-variant-numer
 
 /* ── the creator ── */
 .creator-steps .chip.warn { border-color: var(--red); }
-.creator-text { margin: .4rem 0 .8rem; }
-.creator-text > summary { cursor: pointer; color: var(--ink-2); }
+.creator-text { margin: .5rem 0 1rem; padding: .1rem 0 .1rem .9rem; border-left: 3px solid var(--red); max-width: 46rem; font-size: .95rem; }
+.creator-quote .prose p { margin: .35rem 0; }
+.creator-quote.labelled { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: .6rem; align-items: baseline; }
+.creator-quote-k { font-family: var(--display); color: var(--ink-2); font-size: .85rem; }
+@media (max-width: 560px) { .creator-quote.labelled { grid-template-columns: minmax(0, 1fr); gap: 0; } }
 .creator-status .errors { color: var(--fail); margin: .4rem 0; }
 .budget { font-family: var(--display); margin: .4rem 0; }
 .budget.ok { color: var(--ok); }
