@@ -203,6 +203,14 @@ check('Heroic Events: Variable Battle, Variable Quest, a starred outcome rerolle
   '500 Saxon Raid (roll 1D6): 1–3: Destroyed a Saxon raiding group single-handedly.',
 ]);
 
+// ── the steps' quotes: every pick still matches, for both methods, and is the book's own words ──
+['constructed', 'random'].forEach((m) => Object.keys(G.GUIDE).forEach((step) => {
+  const q = G.guide(src, step, m);
+  check('the ' + m + ' ' + step + ' step quotes all it names', q.missing, []);
+  q.quotes.forEach((x) => x.text.split(/\n\s*\n/).forEach((p) => said(p)));
+}));
+check('the Skills step no longer repeats Table 3.5', G.guide(src, 'skills', 'constructed').quotes.some((x) => /^Awareness/m.test(x.text)), false);
+
 // ── 4. every printed knight's Health and Other panels ──────────────
 // the Starter Set's folios print two knights the rules do not reach: Dame Lynelle's Hit Points 28 and
 // Healing Rate 3 (her CON 19 and SIZ 10 give 29 and 4), and Cadwallon, an esquire, at 12 Hit Points and

@@ -738,5 +738,73 @@
     return { values, errors, notes, method: random ? "random" : "constructed", religion, passionPool: pool, derived: dv, skills, pairs, passions, glory: { inherited, knighted: R.knightGlory, fromLord, household: household ? R.householdGlory : 0, total: glory }, chars: c, charsBase: c0, charSum };
   }
 
-  return { CHARS, round, num, rules, derived, beginning, damage, build, dice, roll, rowFor, rollPart, rollParentGlory, rollQuickHistory, heroicEvent };
+  // ── what each step quotes from the chapter ─────────────────────────
+  // Only the book's words that govern a step's choices and that its controls do not already show (a
+  // table the step draws, a list its select holds, the setting's prose are left to the reader). Each
+  // pick is verbatim: an entity's whole text, its paragraphs matching `para`, or its sentences matching
+  // `sentence`; `guide` reads its sidebars, `note` a table's note. A pick that no longer matches is
+  // reported, as a rule is. `for` limits a pick to one method; `after` sets it below the step's controls.
+  const GUIDE = {
+    knight: [
+      { from: 'Character Creation', sentence: /Players choose one and use only that one/ },
+      { from: 'Constructed Characters', sentence: /^This method gives a set number of points/, label: 'Constructed' },
+      { from: 'Random Characters', sentence: /^Random character generation often creates/, label: 'Random' },
+      { from: 'Class', sentence: /household knights or mercenary knights/ },
+    ],
+    characteristics: [
+      { from: 'Constructed Method', for: 'constructed' },
+      { guide: 'Sample Distinctive Features', para: /^Your first character’s STR and SIZ should sum/, for: 'constructed' },
+      { from: 'Random Method', sentence: /^Roll the indicated number of dice/, for: 'random' },
+    ],
+    features: [
+      { from: 'Sample Distinctive Features', para: /^You may come up with any Distinctive Feature/ },
+      { from: 'Physique', label: 'Physique', after: true }, { from: 'Limbs', label: 'Limbs', after: true }, { from: 'Hair', label: 'Hair', after: true }, { from: 'Face', label: 'Face', after: true }, { from: 'Speech', label: 'Speech', after: true },
+    ],
+    traits: [
+      { from: 'Constructed Method#2', for: 'constructed' },
+      { from: 'Random Method#2', for: 'random' },
+    ],
+    passions: [
+      { from: 'Constructed Method#3', for: 'constructed' },
+      { guide: 'Constructed Method#3', para: /limit the total value of all Passions in each court/ },
+      { from: 'Random Method#3', for: 'random' },
+    ],
+    skills: [
+      { from: 'Constructed#2', for: 'constructed' },
+      { from: 'Random#2', for: 'random' },
+      { from: 'Personal Skill Additions', para: /distribute 10 points among your Skills/ },
+      { from: 'Limitations', para: /^You may not raise a Skill above/ },
+      { note: 'Table 3.5: Beginning Knight Skill Values' },
+    ],
+    training: [
+      { from: 'Attaining Knighthood#2', para: /^To qualify for knighthood/ },
+      { from: 'Training & Practice', para: /^Distribute 5 points among the character’s Skills/ },
+      { from: 'Training & Practice', para: /^You may not raise any Characteristic/ },
+    ],
+    knighted: [
+      { from: 'Parent’s Glory', para: /^When a character becomes a squire/ },
+      { from: 'Starting Knightly Gear', para: /^For their armor/ },
+      { from: 'Horses', para: /^Lords provide four horses/ },
+    ],
+  };
+  const paras = (t) => String(t || '').split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  const sentences = (p) => p.split(/(?<=[.!?])\s+(?=[A-Z“])/);
+  // guide(src, step, method) → { quotes: [{ label, text }], missing: [...] }
+  function guide(src, step, method) {
+    const quotes = [];
+    const missing = [];
+    (GUIDE[step] || []).filter((g) => !g.for || g.for === (method || 'constructed')).forEach((g) => {
+      const whose = g.from || g.guide || g.note;
+      const t = g.note ? src.tableNote(g.note) : g.guide ? src.guide(g.guide) : src.text(g.from);
+      let text = null;
+      if (g.para) text = paras(t).filter((p) => g.para.test(p)).join('\n\n') || null;
+      else if (g.sentence) text = paras(t).map((p) => sentences(p).filter((s) => g.sentence.test(s)).join(' ')).filter(Boolean).join(' ') || null;
+      else text = t && String(t).trim() ? String(t).trim() : null;
+      if (text) quotes.push({ label: g.label || null, text, after: !!g.after });
+      else missing.push(step + ': ' + whose);
+    });
+    return { quotes, missing };
+  }
+
+  return { CHARS, round, num, rules, derived, beginning, damage, build, dice, roll, rowFor, rollPart, rollParentGlory, rollQuickHistory, heroicEvent, GUIDE, guide };
 });

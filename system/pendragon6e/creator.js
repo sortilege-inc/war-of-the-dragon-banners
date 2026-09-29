@@ -1,7 +1,8 @@
 // system/pendragon6e/creator.js — making a player-knight: *Creating Your Player-knight* walked step by
 // step (PLAYBOOK §2), by its Constructed or its Random method (one or the other throughout, as the
-// chapter says; a Random part is rolled once, with the page's die, and kept in the draft). Each step shows the chapter's own text for it,
-// verbatim (its entities, rendered as the reader renders them); the controls pick from the corpus's
+// chapter says; a Random part is rolled once, with the page's die, and kept in the draft). Each step
+// quotes, verbatim, only the chapter's words that govern its choices (chargen.js GUIDE — no setting
+// prose, no table its controls already draw); the controls pick from the corpus's
 // own sets (the religions, the Trait pairs, Table 3.5's Skills, Table 3.6's families, Table 8.1's
 // weapons); every number is chargen.js's, read from the chapter's sentences and tables. What leaves is
 // a knight file the table takes (system/pendragon6e/sheet.js), or, on the GM's and the player's pages,
@@ -17,20 +18,17 @@ window.PDCreator = (function () {
   const G = window.PDChargen;
   const DRAFT_KEY = ((window.VttConfig || {}).storagePrefix || 'sortilege-vtt') + ':creator-draft';
 
-  // the chapter's entities each step shows, in the chapter's order, each shallow (its own text, not
-  // what nests in it; a table's rows are its own); 'Name#2' is the second entity of that name
+  // each step's quotes from the chapter are chargen.js's GUIDE: only the words that govern its choices
   const STEPS = [
-    { id: 'knight', label: '1. Your knight', text: ['Character Creation', 'Constructed Characters', 'Culture and Homeland', 'Religion', 'Constructed', 'Liege Lord and Current Home', 'Class', 'Heir'],
-      random: ['Character Creation', 'Random Characters', 'Culture and Homeland', 'Religion', 'Random', 'Table 3.2: Starting Religion', 'Liege Lord and Current Home', 'Class', 'Heir'] },
-    { id: 'characteristics', label: '2. Characteristics', random: ['Characteristics', 'Random Method', 'Table 3.3: Random Cymric Characteristic Values', 'Derived Characteristics', 'Knockdown', 'Major Wound', 'Weapon Damage', 'Brawling Damage', 'Healing Rate', 'Movement Rate', 'Total Hit Points', 'Unconscious'], text: ['Characteristics', 'Constructed Method', 'Derived Characteristics', 'Knockdown', 'Major Wound', 'Weapon Damage', 'Brawling Damage', 'Healing Rate', 'Movement Rate', 'Total Hit Points', 'Unconscious'] },
-    { id: 'features', label: '3. Distinctive Features', text: ['Distinctive Features', 'Table 3.4: Distinctive Features', 'Sample Distinctive Features', 'Physique', 'Limbs', 'Hair', 'Face', 'Speech'] },
-    { id: 'traits', label: '4. Traits', text: ['Personality Traits', 'Religious Virtues', 'Constructed Method#2', 'Fill in the Opposite Values'], random: ['Personality Traits', 'Religious Virtues', 'Random Method#2', 'Fill in the Opposite Values'] },
-    { id: 'passions', label: '5. Passions', text: ['Passions', 'Constructed Method#3', 'Inherited Passions'], random: ['Passions', 'Random Method#3', 'Inherited Passions'] },
-    { id: 'skills', label: '6. Skills', text: ['Skills', 'Beginning Values', 'Table 3.5: Beginning Knight Skill Values', 'Cultural Skill Modifiers', 'Family Characteristic', 'Constructed#2', 'Table 3.6: Family Characteristics', 'Personal Skill Additions', 'Limitations'],
-      random: ['Skills', 'Beginning Values', 'Table 3.5: Beginning Knight Skill Values', 'Cultural Skill Modifiers', 'Family Characteristic', 'Random#2', 'Table 3.6: Family Characteristics', 'Personal Skill Additions', 'Limitations'] },
-    { id: 'training', label: '7. Training & Practice', text: ['Attaining Knighthood#2', 'Training & Practice'] },
-    { id: 'knighted', label: '8. Being knighted', text: ['Age & Year Born', 'Parent’s Glory', 'Quick Family History', 'Table 3.1: Heroic Events', 'Glory', 'Starting Knightly Gear', 'Horses', 'Table 3.8: Starting Horses'] },
-    { id: 'review', label: '9. The knight', text: [] },
+    { id: 'knight', label: '1. Your knight' },
+    { id: 'characteristics', label: '2. Characteristics' },
+    { id: 'features', label: '3. Distinctive Features' },
+    { id: 'traits', label: '4. Traits' },
+    { id: 'passions', label: '5. Passions' },
+    { id: 'skills', label: '6. Skills' },
+    { id: 'training', label: '7. Training & Practice' },
+    { id: 'knighted', label: '8. Being knighted' },
+    { id: 'review', label: '9. The knight' },
   ];
 
   const fresh = () => ({ method: 'constructed', rolled: {}, parentRolled: null, name: '', religion: '', knightClass: '', homeland: '', lord: '', parentName: '', blazon: '', chars: { SIZ: 12, DEX: 12, STR: 12, CON: 12, APP: 12 }, distinctive: '', sixteen: '', traitPoints: {}, passionPoints: {}, extraPassions: [], family: '', skillPoints: {}, training: [], age: null, year: '', parentGlory: '', lordGlory: '', extraWeapon: '' });
@@ -115,10 +113,14 @@ window.PDCreator = (function () {
       body.innerHTML = '';
       live.length = 0;
       const step = STEPS.find((s) => s.id === stepId);
-      const names = (d.method === 'random' && step.random) || step.text;
-      const text = el('details', { class: 'creator-text', open: stepId !== 'review' || null }, [el('summary', {}, ['The book, for this step'])].concat(names.map(inChapter).filter(Boolean).map((e) => E.render(e, { depth: 1, shallow: true }))));
-      if (names.length) body.appendChild(text);
+      const q = G.guide(src, stepId, d.method);
+      if (q.missing.length) body.appendChild(el('div', { class: 'empty' }, ['The book no longer reads as this step expects: ' + q.missing.join('; ') + '.']));
+      const quotes = (list) => list.length ? el('div', { class: 'creator-text' }, list.map((x) => el('div', { class: 'creator-quote' + (x.label ? ' labelled' : '') }, [x.label ? el('span', { class: 'creator-quote-k' }, [x.label]) : null, E.prose(x.text, 'prose', 'core')]))) : null;
+      const before = quotes(q.quotes.filter((x) => !x.after));
+      const after = quotes(q.quotes.filter((x) => x.after));
+      if (before) body.appendChild(before);
       body.appendChild(STEP[stepId]());
+      if (after) body.appendChild(after);
       const i = STEPS.indexOf(step);
       body.appendChild(el('div', { class: 'chiprow creator-go' }, [
         i > 0 ? button('← ' + STEPS[i - 1].label, () => go(STEPS[i - 1].id), 'ghost') : null,
