@@ -315,35 +315,54 @@
   }
 
   // ── rolling the Random method's parts (the page's die, or a test's) ──
-  // what: 'religion' | 'chars' | 'traits' | 'passions' | 'family'; returns the record the draft keeps
-  function rollPart(R, what, d, rollSide) {
+  // what: 'religion' | 'chars' | 'traits' | 'passions' | 'family'. A part is rolled one die-roll at a
+  // time, in the book's order ("Start at the top and work your way down the left column"), or all
+  // together — the same rolls in the same order either way. `part` is what is rolled so far, in the
+  // shape the draft keeps (d.rolled[what]) once nextRoll finds nothing left.
+  function emptyPart(what) {
+    if (what === 'passions') return { start: {}, pool: null, homeland: null };
+    if (what === 'family') return { rolls: [] };
+    return what === 'religion' ? null : {};
+  }
+  // the next roll of a part: { key, label, expr }, or null when the part is whole
+  function nextRoll(R, what, part) {
     const X = R.random;
-    if (what === 'religion') {
-      const r = roll(X.religion.die, rollSide);
-      const row = rowFor(X.religion.rows, r.total);
-      return Object.assign(r, { value: row ? row[1] : null });
-    }
-    if (what === 'chars') { const o = {}; CHARS.forEach((k) => (o[k] = roll(X.chars[k], rollSide))); return o; }
+    const p = part == null ? emptyPart(what) : part;
+    if (what === 'religion') return p ? null : { key: 'religion', label: 'Religion', expr: X.religion.die };
+    if (what === 'chars') { const k = CHARS.find((c) => !p[c]); return k ? { key: k, label: k, expr: X.chars[k] } : null; }
     if (what === 'traits') {
-      // "Start at the top and work your way down the left column."
-      const o = {};
-      R.pairs.forEach((p) => (o[p.Virtue] = roll(p.Virtue === X.traits.except ? X.traits.exceptRoll : X.traits.each, rollSide)));
-      return o;
+      const t = R.pairs.find((x) => !p[x.Virtue]);
+      return t ? { key: t.Virtue, label: t.Virtue, expr: t.Virtue === X.traits.except ? X.traits.exceptRoll : X.traits.each } : null;
     }
     if (what === 'passions') {
-      const o = { start: {}, pool: null, homeland: null };
-      X.passions.forEach((p) => (o.start[p.name] = roll(p.roll, rollSide)));
-      if (X.homeland) o.homeland = roll(X.homeland.roll, rollSide);
-      o.pool = roll(X.pool, rollSide);
-      return o;
+      const s = X.passions.find((x) => !p.start[x.name]);
+      if (s) return { key: 'start:' + s.name, label: s.name, expr: s.roll };
+      if (X.homeland && !p.homeland) return { key: 'homeland', label: X.homeland.name, expr: X.homeland.roll };
+      return p.pool ? null : { key: 'pool', label: 'Points to distribute', expr: X.pool };
     }
     if (what === 'family') {
-      const first = roll(X.family, rollSide);
-      const out = { rolls: [first] };
-      if (X.gifted && first.total === X.gifted.roll) for (let i = 0; i < X.gifted.again; i++) out.rolls.push(roll(X.family, rollSide));
-      return out;
+      const n = p.rolls.length;
+      const more = X.gifted && n && p.rolls[0].total === X.gifted.roll ? X.gifted.again : 0;
+      return n < 1 + more ? { key: String(n), label: n ? 'Roll ' + (n + 1) : 'Family Characteristic', expr: X.family } : null;
     }
     return null;
+  }
+  // a part with its next roll made (a copy; the draft's is not touched)
+  function rollNext(R, what, part, rollSide) {
+    const nx = nextRoll(R, what, part);
+    const p = part == null ? emptyPart(what) : JSON.parse(JSON.stringify(part));
+    if (!nx) return p;
+    const r = roll(nx.expr, rollSide);
+    if (what === 'religion') { const row = rowFor(R.random.religion.rows, r.total); return Object.assign(r, { value: row ? row[1] : null }); }
+    if (what === 'passions') { if (nx.key === 'homeland') p.homeland = r; else if (nx.key === 'pool') p.pool = r; else p.start[nx.label] = r; return p; }
+    if (what === 'family') { p.rolls.push(r); return p; }
+    p[nx.key] = r;
+    return p;
+  }
+  function rollPart(R, what, d, rollSide) {
+    let p = emptyPart(what);
+    while (nextRoll(R, what, p)) p = rollNext(R, what, p, rollSide);
+    return p;
   }
   // a parent's Glory rolled: "roll 6D6 and multiply the result by 100, then add 2,000"
   function rollParentGlory(R, rollSide) {
@@ -806,5 +825,5 @@
     return { quotes, missing };
   }
 
-  return { CHARS, round, num, rules, derived, beginning, damage, build, dice, roll, rowFor, rollPart, rollParentGlory, rollQuickHistory, heroicEvent, GUIDE, guide };
+  return { CHARS, round, num, rules, derived, beginning, damage, build, dice, roll, rowFor, rollPart, nextRoll, rollNext, rollParentGlory, rollQuickHistory, heroicEvent, GUIDE, guide };
 });

@@ -203,6 +203,24 @@ check('Heroic Events: Variable Battle, Variable Quest, a starred outcome rerolle
   '500 Saxon Raid (roll 1D6): 1–3: Destroyed a Saxon raiding group single-handedly.',
 ]);
 
+// one roll at a time (the creator's choice) is the same rolls, in the same order, as all together
+{
+  const faces = []; for (let i = 0; i < 80; i++) faces.push((i * 7) % 20 + 1);
+  const bySide = (sides) => { let i = 0; return () => ((faces[i++ % faces.length] - 1) % sides) + 1; };
+  ['religion', 'chars', 'traits', 'passions', 'family'].forEach((what) => {
+    const sides = what === 'family' ? 20 : 6;
+    const whole = G.rollPart(R, what, {}, bySide(sides));
+    let p = null; let steps = 0; const one = bySide(sides);
+    while (G.nextRoll(R, what, p) && steps < 50) { p = G.rollNext(R, what, p, one); steps++; }
+    check('one at a time = all together: ' + what + ' (' + steps + ' rolls)', p, whole);
+  });
+  let p = null; const gd = die([20, 3, 20]);
+  const labels = []; let nx;
+  while ((nx = G.nextRoll(R, 'family', p))) { labels.push(nx.label); p = G.rollNext(R, 'family', p, gd); }
+  check('one at a time: Gifted asks for its two more rolls', labels, ['Family Characteristic', 'Roll 2', 'Roll 3']);
+  check('one at a time: the traits go down the left column', (() => { const o = []; let q = {}; let x; while ((x = G.nextRoll(R, 'traits', q))) { o.push(x.label); q = G.rollNext(R, 'traits', q, () => 1); } return o; })(), R.pairs.map((x) => x.Virtue));
+}
+
 // ── the steps' quotes: every pick still matches, for both methods, and is the book's own words ──
 ['constructed', 'random'].forEach((m) => Object.keys(G.GUIDE).forEach((step) => {
   const q = G.guide(src, step, m);
