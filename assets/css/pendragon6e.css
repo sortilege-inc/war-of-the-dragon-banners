@@ -297,21 +297,111 @@ table.printed.traits td.num { text-align: center; width: 3em; font-variant-numer
 .index-list li { break-inside: avoid; }
 .prop-v, .prop-k, .option, .entity, .nested { min-width: 0; }
 
-/* ── the creator ── */
-.creator-steps .chip.warn { border-color: var(--red); }
-.creator-text { margin: .5rem 0 1rem; padding: .1rem 0 .1rem .9rem; border-left: 3px solid var(--red); max-width: 46rem; font-size: .95rem; }
-.creator-quote .prose p { margin: .35rem 0; }
-.creator-quote.labelled { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: .6rem; align-items: baseline; }
-.creator-quote-k { font-family: var(--display); color: var(--ink-2); font-size: .85rem; }
-@media (max-width: 560px) { .creator-quote.labelled { grid-template-columns: minmax(0, 1fr); gap: 0; } }
-.creator-status .errors { color: var(--fail); margin: .4rem 0; }
-.budget { font-family: var(--display); margin: .4rem 0; }
-.budget.ok { color: var(--ok); }
-.budget.over { color: var(--fail); }
-.stepper { display: inline-flex; align-items: center; gap: 2px; }
-.stepper .num { min-width: 2em; text-align: center; }
-.check-name.favored { text-decoration: underline; }
-.creator-traits .trait-row { gap: 4px; }
-.creator-traits .check-name { min-width: 7.5em; }
-.train-row { flex-wrap: wrap; margin: .3rem 0; }
-.creator-go, .creator-done { margin-top: 1rem; }
+/* ── the creator ── (sized by its own width: it is also a panel on the table's pages) */
+.page.creator { container: creator / inline-size; }
+.creator-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem 1rem; }
+.creator-head h1 { margin-bottom: .2rem; }
+/* the steps: a numbered row, the current one filled, one with something left to do marked */
+.creator-steps { display: flex; flex-wrap: wrap; gap: .3rem; margin: .6rem 0 1.4rem; padding-bottom: .8rem; border-bottom: 1px solid var(--rule); }
+.creator-step { display: inline-flex; align-items: center; gap: .4rem; padding: .25rem .6rem .25rem .3rem; border-radius: 999px; text-decoration: none; color: var(--ink-2); font-family: var(--display); font-size: .9rem; border: 1px solid transparent; }
+.creator-step:hover { border-color: var(--rule); color: var(--ink); }
+.creator-step-n { display: inline-grid; place-items: center; width: 1.45rem; height: 1.45rem; border-radius: 50%; border: 1px solid var(--rule); background: var(--card); font-size: .8rem; }
+.creator-step.warn .creator-step-n { border-color: var(--red); color: var(--red); }
+.creator-step.on { color: var(--ink); border-color: var(--rule); background: var(--card); }
+.creator-step.on .creator-step-n { background: var(--red); border-color: var(--red); color: #fff; }
+/* the step: its controls, and beside them the book's words for it */
+.creator-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(15rem, 23rem); gap: 1rem 2.5rem; align-items: start; }
+.creator-grid.bare { grid-template-columns: minmax(0, 1fr); }
+.creator-main { grid-column: 1; grid-row: 1 / span 3; min-width: 0; container: creator-main / inline-size; }
+.creator-rules { grid-column: 2; padding: .2rem 0 .2rem 1rem; border-left: 3px solid var(--red); font-size: .92rem; color: var(--ink); }
+.creator-rules-k, .creator-sub { font-family: var(--display); font-size: .8rem; letter-spacing: .08em; color: var(--ink-2); margin-bottom: .2rem; }
+.creator-sub { margin: 1.1rem 0 .3rem; }
+.creator-rules .prose p { margin: .3rem 0; }
+.creator-quote + .creator-quote { margin-top: .5rem; }
+.creator-quote-k { display: block; font-family: var(--display); color: var(--red); font-size: .85rem; }
+.creator-step-h { margin: 0 0 .7rem; font-size: 1.35rem; }
+@container creator (max-width: 860px) {
+  .creator-grid { grid-template-columns: minmax(0, 1fr); }
+  .creator-main, .creator-rules { grid-column: 1; grid-row: auto; }
+  .creator-step-k { display: none; }
+  .creator-step.on .creator-step-k { display: inline; }
+}
+.creator-form { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); gap: .8rem 1.1rem; align-items: start; }
+.creator .field .scope, .creator .field input.text, .creator .field textarea { width: 100%; }
+.creator input.text, .creator textarea.text { font: inherit; padding: .4rem .5rem; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--card); color: var(--ink); box-sizing: border-box; }
+.creator .field .scope, .creator .field input.text { min-height: 2.45rem; box-sizing: border-box; }
+.creator .field.narrow { max-width: 24rem; margin-bottom: .6rem; }
+.field-v { font-size: 1.05rem; padding: .35rem 0; }
+.field-note { font-size: .82rem; color: var(--ink-2); }
+.callout { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: .5rem .8rem; margin: 0 0 .8rem; }
+.callout .items { margin: .4rem 0 0; padding-left: 1.1rem; }
+.faces { font-size: .82rem; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.faces.pending { opacity: .6; }
+/* a Random part's rolls: the button, and whether it rolls one at a time or all together */
+.creator-roller { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .9rem; margin: 0 0 .9rem; }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 999px; overflow: hidden; background: var(--card); }
+.seg-b { font: inherit; font-size: .82rem; padding: .25rem .7rem; border: 0; background: none; color: var(--ink-2); cursor: pointer; }
+.seg-b.on { background: var(--ink); color: var(--paper); }
+.budget { display: inline-flex; align-items: baseline; gap: .5rem; font-family: var(--display); margin: .2rem 0 .6rem; color: var(--ink-2); }
+.budget b { color: var(--ink); font-weight: 600; }
+.budget.ok b { color: var(--ok); }
+.budget.over b { color: var(--fail); }
+.budget.inline { margin: 0; font-size: .9rem; }
+.stepper { display: inline-flex; align-items: center; border: 1px solid var(--rule); border-radius: 999px; background: var(--card); }
+.step-b { font: inherit; width: 1.7rem; height: 1.6rem; border: 0; background: none; color: var(--ink); cursor: pointer; line-height: 1; }
+.step-b:hover:not([disabled]) { color: var(--red); }
+.step-b[disabled] { opacity: .3; cursor: default; }
+.stepper .num { min-width: 1.8em; text-align: center; font-size: .85rem; font-weight: 500; color: var(--ink-2); }
+.stepper.used .num { color: var(--ink); font-weight: 700; }
+/* the step's tables */
+.creator-table { border-collapse: collapse; font-size: .95rem; }
+.creator-table th { font-family: var(--display); font-weight: 500; font-size: .82rem; letter-spacing: .05em; color: var(--ink-2); text-align: left; padding: .25rem .5rem; }
+.creator-table td { padding: .2rem .5rem; border-top: 1px solid var(--rule); vertical-align: middle; }
+.creator-table td.v { font-family: var(--display); font-weight: 700; font-size: 1.1rem; text-align: center; min-width: 2em; }
+.creator-chars td { text-align: center; }
+.creator-chars .num-in { width: 4rem; text-align: center; }
+.creator-chars tr.mod td { font-size: .85rem; color: var(--ink-2); }
+.creator-chars tr.final td { font-family: var(--display); font-weight: 700; font-size: 1.3rem; }
+.creator-traits td.l { text-align: right; }
+.creator-traits td.sl { color: var(--ink-2); padding: 0; text-align: center; }
+.creator-traits td { border-top: 0; padding: .15rem .35rem; }
+.creator-traits tr:nth-child(even) td { background: var(--paper-2); }
+.creator-traits.random td.faces-c { text-align: right; white-space: nowrap; }
+.trait-n.favored { text-decoration: underline; text-underline-offset: 3px; }
+.creator-skills tr.knightly td:first-child { font-weight: 600; }
+.creator-skill-groups > div { break-inside: avoid; }
+.creator-skill-groups .creator-skills { width: 100%; }
+.creator-skills th, .creator-skills td { padding-left: .35rem; padding-right: .35rem; }
+@container creator-main (min-width: 820px) { .creator-skill-groups { columns: 2; column-gap: 1.5rem; } }
+.creator-skill-groups .creator-sub { margin-top: .4rem; }
+.creator-passions td:first-child, .creator-skills td:first-child { min-width: 9em; }
+.creator-kvs { display: flex; flex-wrap: wrap; gap: .5rem 1.6rem; max-width: 44rem; }
+.kv-k { font-size: .8rem; color: var(--ink-2); }
+.kv-v { font-family: var(--display); font-weight: 700; font-size: 1.2rem; }
+.creator-total { display: flex; align-items: baseline; gap: .6rem; margin: .6rem 0 .2rem; font-family: var(--display); }
+.creator-total b { font-size: 1.6rem; color: var(--red); }
+.creator-add { display: flex; gap: .5rem; margin-top: .6rem; max-width: 30rem; }
+.creator-add input { flex: 1; min-width: 0; }
+.train-row { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .6rem; padding: .45rem .6rem; margin: 0 0 .4rem; background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); }
+.train-y { font-family: var(--display); min-width: 3.6em; }
+.train-x { margin-left: auto; }
+.review-head { margin-bottom: .8rem; }
+.review-name { font-family: var(--display); font-size: 1.7rem; font-weight: 700; }
+.review-sec h4 { margin: 1rem 0 .2rem; }
+/* what is left to do, and the way on */
+.creator-foot { margin-top: 1.4rem; padding-top: .8rem; border-top: 1px solid var(--rule); }
+.creator-todo ul { list-style: none; margin: 0 0 .4rem; padding: 0; display: flex; flex-wrap: wrap; gap: .3rem 1.2rem; color: var(--fail); font-size: .9rem; }
+.creator-todo li::before { content: '• '; }
+.creator-go, .creator-done { margin-top: .6rem; }
+@container creator (max-width: 560px) {
+  .creator-table td { padding: .15rem .25rem; }
+  .creator-traits td { padding: .1rem .15rem; }
+  .step-b { width: 1.35rem; height: 1.5rem; }
+  .stepper .num { min-width: 1.4em; }
+  .creator-traits td.v { font-size: 1rem; min-width: 1.4em; }
+  .creator-chars .num-in { width: 2.9rem; padding: .3rem .15rem; }
+  .creator-chars th:first-child { font-size: .72rem; }
+  .creator-passions td:first-child, .creator-skills td:first-child { min-width: 0; }
+  .creator-skills { font-size: .88rem; }
+  .creator-skills th, .creator-skills td { padding-left: .2rem; padding-right: .2rem; }
+}
